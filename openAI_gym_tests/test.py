@@ -1,13 +1,7 @@
-from __future__ import division
-import numpy as np
-import matplotlib.pyplot as plt
-import numpy.random as rn
-import sys
-import scipy.integrate
-
-def main():
-	
-
-
-if __name__ == "__main__":
-	main()
+import gym
+env = gym.make('MsPacman-v0')
+env.reset()
+for _ in range(1000):
+    env.render()
+    env.step(env.action_space.sample()) # take a random action
+env.close()
