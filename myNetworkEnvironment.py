@@ -47,10 +47,10 @@ class myNetworkEnvironment(gym.Env):
     def step(self, action):
         # Execute one time step within the environment
         self.__take_action__(action)
-        self.current_step += 1
+        self.currentStep += 1
         
         reward = self.currentRate;
-        done = self.current_step == self.episodeLength-1
+        done = self.currentStep == self.episodeLength-1
         obs = self.taggedUERates;
         
         return obs, reward, done, {}
@@ -58,6 +58,7 @@ class myNetworkEnvironment(gym.Env):
     def __take_action__(self, action):
         # this function updates the currentRate attribute
         self.currentRate = self.taggedUERates[action];
+        self.currentAction = action;
                 
     
     def reset(self):
@@ -65,7 +66,7 @@ class myNetworkEnvironment(gym.Env):
         # Instantiate the network object
         
         # Generate network instance
-        self.myNetwork.generateNetwork(self.lambdaBS, self.lambdaUE, self.networkArea);
+        self.myNetwork.generateNetwork();
         # Train KNN model for BSs
         self.myNetwork.trainKNearestBSModel(self.k);
         
@@ -77,7 +78,7 @@ class myNetworkEnvironment(gym.Env):
         
         # get list of k closest BSs from tagged user
         taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
-                                                       self.taggedCoord[1]);
+                                                       self.taggedCoord[1])[0];
         
         # compute capacities received from k closest BSs
         self.taggedUERates = np.zeros((self.k, 1));
@@ -91,9 +92,9 @@ class myNetworkEnvironment(gym.Env):
         # return initial state
         return self.taggedUERates;
     
-    
-    def render(self, mode='human', close=False):
+    def render(self):
     # Render the environment to the screen
         myFig = self.myNetwork.showNetwork();
         plt.figure(myFig.number);
-        
+        plt.scatter(self.myNetwork.BSLocation[self.currentAction,0], self.myNetwork.BSLocation[self.currentAction,1], c='g', marker = '^', s=400);
+        plt.scatter(self.myNetwork.UELocation[self.taggedUEId, 0], self.myNetwork.UELocation[self.taggedUEId,1], c='g', s=200);
