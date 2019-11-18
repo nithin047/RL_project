@@ -71,7 +71,7 @@ class myNetworkEnvironment(gym.Env):
         self.myNetwork.trainKNearestBSModel(self.k);
         
         # tagged user id is 1 w.l.o.g.
-        self.taggedUEId = 1;
+        self.taggedUEId = 0;
         
         # tagged user coordinates
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
