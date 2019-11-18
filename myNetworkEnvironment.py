@@ -31,7 +31,7 @@ class myNetworkEnvironment(gym.Env):
         # Define State Space, or observation space
         # There are k features in state space, where feature i corresponds to
         # the capacity received by BS i
-        self.observation_space = spaces.Discrete(k);
+        self.observation_space = spaces.Discrete(k); #DOUBLE CHECK THIS
         
         # Create an empty network object
         self.myNetwork = Network(lambdaBS, lambdaUE, networkArea);
@@ -92,7 +92,7 @@ class myNetworkEnvironment(gym.Env):
         # return initial state
         return self.taggedUERates;
     
-    def render(self):
+    def render(self): #MODIFY THIS!
     # Render the environment to the screen
         myFig = self.myNetwork.showNetwork();
         plt.figure(myFig.number);

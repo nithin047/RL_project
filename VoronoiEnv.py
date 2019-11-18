@@ -79,3 +79,5 @@ class VoronoiEnv(gym.Env):
     	function that displays the learned Voronoi tessellation
     	"""
 
+    	return None
+
