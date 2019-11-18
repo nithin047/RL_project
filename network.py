@@ -47,17 +47,13 @@ class Network(object):
         # angles from 0-2pi of motion directions 
         self.UEMotionDirection = np.random.rand(self.numberOfUE, 1)*2*np.pi; 
         
-        return None
-
     def trainKNearestBSModel(self, k): 
         # this function trains the KNN model on BS locations data
         # call this function (once) before calling kClosestBS function
         self.k = k;
         self.neighborsModel = NearestNeighbors(n_neighbors=self.k);
         self.neighborsModel.fit(self.BSLocation); 
-        
-        return None
-        
+                
 
     def kClosestBS(self, x, y):
         # returns BS id of k nearest BSs of point X-Y
@@ -88,8 +84,8 @@ class Network(object):
         # total received power at selected UE, Signal + Interference
         totalRxPower = np.sum(PTx*(dists**(-alpha)));
         
-        # Signal power from BS BSid
-        RxSignalPower = PTx*(dists[BSid]**(-alpha));
+        # Signal power from BS BSid, capped at 1
+        RxSignalPower = PTx*np.min([(dists[BSid]**(-alpha)), 1]);
         
         # Interference Power
         RxInterferencePower = totalRxPower - RxSignalPower;
