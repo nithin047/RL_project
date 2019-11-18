@@ -9,6 +9,7 @@ import gym
 from gym import spaces
 from network import Network
 import matplotlib.pyplot as plt
+import numpy as np
 
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
@@ -52,6 +53,8 @@ class myNetworkEnvironment(gym.Env):
         done = self.current_step == self.episodeLength-1
         obs = self.taggedUERates;
         
+        return obs, reward, done, {}
+        
     def __take_action__(self, action):
         # this function updates the currentRate attribute
         self.currentRate = self.taggedUERates[action];
@@ -62,7 +65,7 @@ class myNetworkEnvironment(gym.Env):
         # Instantiate the network object
         
         # Generate network instance
-        self.myNetwork.generateNetwork(lambdaBS, lambdaUE, networkArea);
+        self.myNetwork.generateNetwork(self.lambdaBS, self.lambdaUE, self.networkArea);
         # Train KNN model for BSs
         self.myNetwork.trainKNearestBSModel(self.k);
         
