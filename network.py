@@ -68,11 +68,15 @@ class Network(object):
 
     
     def showNetwork(self):
-        plt.scatter(self.BSLocation[:,0], self.BSLocation[:,1], c='b', marker = '^', s=30)
-        plt.scatter(self.UELocation[:,0], self.UELocation[:,1], c='r', s=10)
+        myFig = plt.figure(figsize=(15,15))
+        plt.scatter(self.BSLocation[:,0], self.BSLocation[:,1], c='b', marker = '^', s=200)
+        plt.scatter(self.UELocation[:,0], self.UELocation[:,1], c='r', s=50)
         plt.xlim((0, np.sqrt(self.networkArea)))
         plt.ylim((0, np.sqrt(self.networkArea)))
+        plt.legend(('Base Stations', 'UEs'), loc = 1, fontsize = 'xx-large')
         plt.show()
+        
+        return myFig;
         
     def getRate(self, BSid, UECoordinates, PTx, alpha, N0, B):
         # this function returns rate seen by a UE located at location
