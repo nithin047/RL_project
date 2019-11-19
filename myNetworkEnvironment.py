@@ -50,7 +50,7 @@ class myNetworkEnvironment(gym.Env):
         self.currentStep += 1
         
         reward = self.currentRate;
-        done = self.currentStep == self.episodeLength-1
+        done = self.currentStep == self.episodeLength
         obs = self.taggedUERates;
         
         return obs, reward, done, {}
@@ -81,10 +81,10 @@ class myNetworkEnvironment(gym.Env):
                                                        self.taggedCoord[1])[0];
         
         # compute capacities received from k closest BSs
-        self.taggedUERates = np.zeros((self.k, 1));
+        self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
             currentBSId = taggedUEKClosestBS[i];
-            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1e8);
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
         
         # set current step to 0
         self.currentStep = 0;
