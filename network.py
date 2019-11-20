@@ -24,6 +24,7 @@ class Network(object):
         self.numberOfUE = 0; # number of UEs in the network
         self.UELocation = np.zeros((1,2)); # X-Y coordinates of UEs in network
         self.UEMotionDirection = np.zeros((1,1)); # angles from 0-2pi of motion directions 
+        self.BSLoads = np.zeros(self.numberOfBS, 1) # load of each BS
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -47,6 +48,9 @@ class Network(object):
         # angles from 0-2pi of motion directions 
         self.UEMotionDirection = np.random.rand(self.numberOfUE, 1)*2*np.pi; 
         
+        # Determine load of each BS
+        self.getVoronoiLoads();
+        
     def trainKNearestBSModel(self, k): 
         # this function trains the KNN model on BS locations data
         # call this function (once) before calling kClosestBS function
@@ -61,6 +65,17 @@ class Network(object):
         dist, ind = self.neighborsModel.kneighbors(np.array([x, y]).reshape(1, -1))
         
         return ind
+    
+    def getVoronoiLoads(self):
+        # returns loads of each BS assuming Voronoi association
+        
+        voronoiModel = NearestNeighbors(n_neighbors=1);
+        voronoiModel.fit(self.BSLocation); 
+        
+        for i in range(self.numberOfUE):
+            dist, ind = voronoiModel.kneighbors(self.UELocation[i, :].reshape(1, -1));
+            self.BSLoads[ind] += 1;
+            
 
     
     def showNetwork(self):
