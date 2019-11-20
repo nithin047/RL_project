@@ -20,9 +20,9 @@ if __name__ == "__main__":
     # create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength);
     
-    for j in range(10):
+    for j in range(1000):
         obs = env.reset();
-        for i in range(10):
+        for i in range(20):
             action = env.action_space.sample()
             obs, reward, done, info = env.step(action)
             env.render()
