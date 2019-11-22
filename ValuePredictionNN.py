@@ -1,6 +1,6 @@
 #setting up the basic structure of a neural network to approximate state values
 
-import gym 
+import gym
 import numpy as np
 import torch
 from torch import nn, optim
