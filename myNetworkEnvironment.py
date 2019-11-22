@@ -84,7 +84,9 @@ class myNetworkEnvironment(gym.Env):
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
             currentBSId = self.taggedUEKClosestBS[i];
-            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
+
+        self.taggedUERates = np.random.permutation(self.taggedUERates)
         
         # set current step to 0
         self.currentStep = 0;
