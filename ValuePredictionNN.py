@@ -11,7 +11,7 @@ class ValueFunctionWithNN():
         """
         k: the number of nearest BSs that we care about
         """
-        self.n_in = k
+        self.n_in = 2*k
         self.n_h = 32
         self.n_out = 1
 
@@ -32,7 +32,7 @@ class ValueFunctionWithNN():
         self.optimizer.zero_grad()
         s_tau = Variable(torch.from_numpy(s_tau))
         value = self.model(s_tau.float())
-        v_hat = float(value.data.numpy()[0])
+        #v_hat = float(value.data.numpy()[0])
         loss = alpha * 0.5 * (G - value).pow(2)
         loss.backward()
         self.optimizer.step()

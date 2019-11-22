@@ -51,13 +51,13 @@ class myNetworkEnvironment(gym.Env):
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
-        obs = self.taggedUERates;
+        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS, 0])));
         
         return obs, reward, done, {}
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action];
+        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action, 0]+1);
         self.currentAction = action;
                 
     
@@ -77,20 +77,20 @@ class myNetworkEnvironment(gym.Env):
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
         
         # get list of k closest BSs from tagged user
-        taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
                                                        self.taggedCoord[1])[0];
         
         # compute capacities received from k closest BSs
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
-            currentBSId = taggedUEKClosestBS[i];
+            currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
         
         # set current step to 0
         self.currentStep = 0;
         
         # return initial state
-        return self.taggedUERates;
+        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS,0])));
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
