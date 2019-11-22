@@ -23,7 +23,6 @@ def test_nn():
 	env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength);
 	V = ValueFunctionWithNN(k)
 	
-
 	NUM_ITERATIONS = 10000
 	gamma = 1
 	n = 1
