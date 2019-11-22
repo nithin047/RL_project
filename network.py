@@ -111,8 +111,8 @@ class Network(object):
         
         # Capacity: Shannon Ergodic Rate
         capacity = B*np.log2(1+SINR);
-        
-        return capacity;
+
+        return capacity
     
     def getMobilityTrace(self, UEid, deltaT, velocity):
         # This function returns the location of the UE UEid after deltaT time
