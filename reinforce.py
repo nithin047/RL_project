@@ -17,7 +17,7 @@ class PiApproximationWithNN():
                  alpha = 3e-4):
         #initializing the neural network
         self.n_in = state_dims
-        self.n_h = 32
+        self.n_h = 16
         self.n_out = num_actions
         self.alpha = alpha
 
@@ -105,10 +105,10 @@ V:Baseline) -> Iterable[float]:
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 3e-5;
-    networkArea = 1e7;
-    k = 10;
-    episodeLength = 20;
+    lambdaUE = 1e-5;
+    networkArea = 3e7;
+    k = 8;
+    episodeLength = 5;
 
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
