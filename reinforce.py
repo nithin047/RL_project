@@ -116,7 +116,7 @@ if __name__ == "__main__":
     alpha = 3e-4
 
     pi = PiApproximationWithNN(
-    env.k,
+    2*env.k,
     env.action_space.n,
     alpha)
 
