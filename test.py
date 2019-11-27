@@ -1,0 +1,13 @@
+import numpy
+
+a = [1, 2, 3, 4, 5]
+b = [6, 7, 8, 9, 10]
+
+print(a)
+print(b)
+rng_state = numpy.random.get_state()
+numpy.random.shuffle(a)
+numpy.random.set_state(rng_state)
+numpy.random.shuffle(b)
+print(a)
+print(b)
