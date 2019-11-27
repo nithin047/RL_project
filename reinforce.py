@@ -21,7 +21,7 @@ class PiApproximationWithNN():
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -106,9 +106,9 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 1e-5;
-    networkArea = 3e7;
+    networkArea = 5e7;
     k = 8;
-    episodeLength = 5;
+    episodeLength = 3;
 
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 50000, pi,B)
+    G = REINFORCE(env, gamma, 60000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
