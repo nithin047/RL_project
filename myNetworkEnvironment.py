@@ -14,7 +14,7 @@ import numpy as np
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
         
-    def __init__(self, lambdaBS, lambdaUE, networkArea, k, episodeLength):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength):
         # Constructor function
         # k: number of closest BSs to consider in the action space
         
@@ -34,7 +34,7 @@ class myNetworkEnvironment(gym.Env):
         self.observation_space = spaces.Discrete(k); #DOUBLE CHECK THIS
         
         # Create an empty network object
-        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea);
+        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea, handoffDuration);
         
         # save input variables
         self.lambdaBS = lambdaBS;
@@ -47,7 +47,7 @@ class myNetworkEnvironment(gym.Env):
     def step(self, action):
         # Execute one time step within the environment
         self.__take_action__(action)
-        self.currentStep += 1
+        self.currentStep += 1;
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
@@ -57,9 +57,16 @@ class myNetworkEnvironment(gym.Env):
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action, 0]+1);
+        
+        # set current action as the BS serving the tagged UE
+        self.myNetwork.setCurrentBS(self.taggedUEKClosestBS[action]); 
+        
+        if (self.myNetwork.isRateZero()):
+            self.currentRate = 0;
+        else:
+            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action, 0]+1);
+        
         self.currentAction = action;
-                
     
     def reset(self):
         # Reset the state of the environment to an initial state

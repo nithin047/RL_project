@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 
 
 class Network(object):
-    def __init__(self, lambdaBS, lambdaUE, networkArea):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration):
         self.lambdaBS = lambdaBS; # intensity of base stations in BS/m^2
         self.lambdaUE = lambdaUE;
         self.networkArea = networkArea; # area of the network to be simulated
@@ -24,6 +24,11 @@ class Network(object):
         self.numberOfUE = 0; # number of UEs in the network
         self.UELocation = np.zeros((1,2)); # X-Y coordinates of UEs in network
         self.UEMotionDirection = np.zeros((1,1)); # angles from 0-2pi of motion directions 
+        
+        self.handoffDuration = handoffDuration; # how many time slots service is lost
+        
+        self.timeSinceLastHandoff = handoffDuration + 1; # time the last handoff started 
+        self.currentBS = -1;
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -76,7 +81,10 @@ class Network(object):
         for i in range(1, self.numberOfUE):
             dist, ind = voronoiModel.kneighbors(self.UELocation[i, :].reshape(1, -1));
             self.BSLoads[ind] += 1;
-            
+        
+        # set current base station attribute, i.e. BS tagged UE is connected to
+        dist, ind = voronoiModel.kneighbors(self.UELocation[0, :].reshape(1, -1));
+        self.currentBS = ind;
 
     
     def showNetwork(self):
@@ -128,9 +136,28 @@ class Network(object):
         finalLocation = initUELoc + displacementVector;
         
         return finalLocation;
+    
+    def setCurrentBS(self, BSid):
+        # This function sets the current BS the tagged UE is connected to
+        
+        if (self.currentBS == BSid):
+            # do nothing, but update time since last handoff
+            self.timeSinceLastHandoff +=1;
+        else:
+            # reset time since last handoff
+            self.timeSinceLastHandoff = 0;
+            self.currentBS = BSid;
+            
+    def isRateZero(self):
+        # Returns true if the tagged UE currently receives 0 rate
+        
+        if (self.timeSinceLastHandoff > self.handoffDuration):
+            return True;
+        else:
+            return False;
 
 if __name__ == "__main__":
-    myNetwork = Network(3e-6, 3e-5, 1e7);
+    myNetwork = Network(3e-6, 3e-5, 1e7, 2);
     myNetwork.generateNetwork();
     myNetwork.showNetwork();
     myNetwork.trainKNearestBSModel(3);
