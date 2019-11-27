@@ -109,9 +109,10 @@ if __name__ == "__main__":
     networkArea = 5e7;
     k = 8;
     episodeLength = 3;
+    handoffDuration = 0;
 
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
     gamma = 1.
     alpha = 3e-4
 
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 60000, pi,B)
+    G = REINFORCE(env, gamma, 10000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -133,4 +134,7 @@ if __name__ == "__main__":
     print(value.data.numpy())
     # plt.plot(G)
     # plt.savefig("help.eps")
+    aa = obs.data.numpy()[0:k];
+    bb = obs.data.numpy()[k:2*k];
+    print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
 
