@@ -48,7 +48,7 @@ class Network(object):
         self.UEMotionDirection = np.random.rand(self.numberOfUE, 1)*2*np.pi; 
         
         # Determine load of each BS
-        self.BSLoads = np.zeros((self.numberOfBS, 1)) # load of each BS
+        self.BSLoads = np.zeros(self.numberOfBS) # load of each BS
         self.getVoronoiLoads();
         
     def trainKNearestBSModel(self, k): 

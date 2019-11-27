@@ -51,13 +51,13 @@ class myNetworkEnvironment(gym.Env):
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
-        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS, 0])));
+        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
         
         return obs, reward, done, {}
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action, 0]+1);
+        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
         self.currentAction = action;
                 
     
@@ -92,7 +92,7 @@ class myNetworkEnvironment(gym.Env):
         self.currentStep = 0;
         
         # return initial state
-        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS,0])));
+        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
