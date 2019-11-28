@@ -93,6 +93,24 @@ class myNetworkEnvironment(gym.Env):
         
         # return initial state
         return self.taggedUERates;
+
+    def getKClosestBS(self, UECoordinates):
+        #returns a 2-D array, of size [k, 2]. The first row has rate values, and the second consists of unique BS IDs corresponding to those values. 
+
+        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
+        taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = taggedUEKClosestBS[i];
+            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
+
+        return_array = []
+        return_array.append(taggedUERates)
+        return_array.append(taggedUEKClosestBS)
+
+        return np.asarray(return_array)
+
+
+
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
