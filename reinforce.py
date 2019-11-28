@@ -102,8 +102,7 @@ V:Baseline) -> Iterable[float]:
 
     return G_list
 
-if __name__ == "__main__":
-
+def train_and_save():
     lambdaBS = 3e-6;
     lambdaUE = 3e-5;
     networkArea = 1e7;
@@ -122,15 +121,13 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 50000, pi,B)
-    obs = env.reset()
-    print(obs)
-    print("Position of max SINR in SNR array")
-    print(np.argmax(obs))
-    obs = torch.from_numpy(obs)
-    value = pi.model(obs.float())
-    print("probability vector")
-    print(value.data.numpy())
-    # plt.plot(G)
-    # plt.savefig("help.eps")
+    G = REINFORCE(env, gamma, 100000, pi,B)
+    
+    #saving the trained policy network
+    torch.save(pi.model, "policy_network.pt")
+
+if __name__ == "__main__":
+
+    train_and_save()
+
 
