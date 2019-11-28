@@ -14,7 +14,7 @@ import numpy as np
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
         
-    def __init__(self, lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength):
         # Constructor function
         # k: number of closest BSs to consider in the action space
         
@@ -34,7 +34,7 @@ class myNetworkEnvironment(gym.Env):
         self.observation_space = spaces.Discrete(k); #DOUBLE CHECK THIS
         
         # Create an empty network object
-        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea, handoffDuration);
+        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT);
         
         # save input variables
         self.lambdaBS = lambdaBS;
@@ -42,6 +42,9 @@ class myNetworkEnvironment(gym.Env):
         self.networkArea = networkArea;
         self.k = k;
         self.episodeLength = episodeLength;
+        
+        # tagged user id is 1 w.l.o.g.
+        self.taggedUEId = 0;
         
         
     def step(self, action):
@@ -67,6 +70,18 @@ class myNetworkEnvironment(gym.Env):
             self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
 
         self.currentAction = action;
+        self.myNetwork.stepForward(self.taggedUEId);
+        self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
+        
+        # get list of k closest BSs from tagged user
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+                                                       self.taggedCoord[1])[0];
+                                                            
+        # compute capacities received from k closest BSs
+        self.taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = self.taggedUEKClosestBS[i];
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
     
     def reset(self):
         # Reset the state of the environment to an initial state
@@ -76,9 +91,6 @@ class myNetworkEnvironment(gym.Env):
         self.myNetwork.generateNetwork();
         # Train KNN model for BSs
         self.myNetwork.trainKNearestBSModel(self.k);
-        
-        # tagged user id is 1 w.l.o.g.
-        self.taggedUEId = 0;
         
         # tagged user coordinates
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
@@ -91,9 +103,9 @@ class myNetworkEnvironment(gym.Env):
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
             currentBSId = self.taggedUEKClosestBS[i];
-            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1000);
 
-        self.taggedUERates = np.random.permutation(self.taggedUERates)
+        #self.taggedUERates = np.random.permutation(self.taggedUERates)
         
         # set current step to 0
         self.currentStep = 0;

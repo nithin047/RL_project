@@ -11,7 +11,7 @@ from sklearn.neighbors import NearestNeighbors
 
 
 class Network(object):
-    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT):
         self.lambdaBS = lambdaBS; # intensity of base stations in BS/m^2
         self.lambdaUE = lambdaUE;
         self.networkArea = networkArea; # area of the network to be simulated
@@ -29,6 +29,9 @@ class Network(object):
         
         self.timeSinceLastHandoff = handoffDuration + 1; # time the last handoff started 
         self.currentBS = -1;
+        
+        self.velocity = velocity;
+        self.deltaT = deltaT;
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -42,7 +45,7 @@ class Network(object):
         
         # Determine number of UEs to be placed in network
         # There is at least 1 UE in the entwork, namely the tagged UE
-        # tagged UE is UE with index 1
+        # tagged UE is UE with index 0
         self.numberOfUE = np.random.poisson(self.lambdaUE * self.networkArea) + 1;
         
         # Determine their locations
@@ -122,20 +125,24 @@ class Network(object):
 
         return capacity
     
-    def getMobilityTrace(self, UEid, deltaT, velocity):
+    def getMobilityTrace(self, UEid):
         # This function returns the location of the UE UEid after deltaT time
         # assuming constant velocity v, and fixed environment, i.e., other 
         # UEs are NOT moving
         
         # get initial location of UE UEid
         initUELoc = self.UELocation[UEid, :];
-        distanceTravelled = velocity*deltaT;
+        distanceTravelled = self.velocity*self.deltaT;
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
         finalLocation = initUELoc + displacementVector;
         
         return finalLocation;
+    
+    def stepForward(self, UEid):
+        # updates location of UE UEid
+        self.UELocation[UEid, :] = self.getMobilityTrace(UEid);
     
     def setCurrentBS(self, BSid):
         # This function sets the current BS the tagged UE is connected to
@@ -151,11 +158,12 @@ class Network(object):
     def isRateZero(self):
         # Returns true if the tagged UE currently receives 0 rate
         
-        if (self.timeSinceLastHandoff > self.handoffDuration):
+        if (self.timeSinceLastHandoff < self.handoffDuration):
             return True;
         else:
             return False;
 
+# outdated function calls
 if __name__ == "__main__":
     myNetwork = Network(3e-6, 3e-5, 1e7, 2);
     myNetwork.generateNetwork();

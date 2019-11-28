@@ -25,8 +25,6 @@ class PiApproximationWithNN():
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
-
-
     def __call__(self, s, k) -> int:
         #returns an action sampled according to the probability distribution that the policy network generates
         s = torch.from_numpy(s)
@@ -48,6 +46,26 @@ class PiApproximationWithNN():
         loss = - self.alpha * gamma_t * delta * torch.log(pi_A_t)
         loss.backward()
         self.optimizer.step()
+        
+class maxSINRPolicy():
+    #this class defines the greedy max SINR policy
+    def __init__(self, k):
+        self.k = k
+
+    def __call__(self, s) -> int:
+        # assume state space is only the SINR from k closest BS
+        action = np.argmax(s[0:self.k]);
+        return action
+    
+class maxSharedRatePolicy():
+    #this class defines the greedy max SINR policy
+    def __init__(self, k):
+        self.k = k
+
+    def __call__(self, state) -> int:
+        # assume state space is only the SINR from k closest BS
+        action = np.argmax(state[0:self.k]/(state[self.k:2*self.k]+1));
+        return action
 
 class Baseline(object):
     #naive implementation of a zero baseline. Using the state values as baseline resulted in very unstable policies, so I think
@@ -102,28 +120,111 @@ V:Baseline) -> Iterable[float]:
 
     return G_list
 
+def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
+    
+    myMaxSINRPolicy = maxSINRPolicy(env.k);
+    myMaxSharedRatePolicy = maxSharedRatePolicy(env.k);
+    
+    meanRateListMaxSINR = list(); # list storing mean rate per episode for max sinr policy
+    meanRateListMaxSharedRate = list(); # list storing mean rate per episode for max sinr policy
+    meanRateListRLPolicy = list(); # list storing mean rate per episode for learnt policy
+    
+    # start with max sinr policy
+    for epi in range(nEpisodes):
+                
+        # start with max SINR policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state = env.reset();
+        
+        while (not done):
+            a = myMaxSINRPolicy(state);
+            state, reward, done, info = env.step(a);
+            sumRate += reward;
+            episodeLength += 1;
+            
+        meanRateListMaxSINR.append(sumRate/episodeLength);
+        
+        # then max shared rate policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state = env.reset();
+        
+        while (not done):
+            a = myMaxSharedRatePolicy(state);
+            state, reward, done, info = env.step(a);
+            sumRate += reward;
+            episodeLength += 1;
+            
+        meanRateListMaxSharedRate.append(sumRate/episodeLength);
+        
+        # then RL policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state= env.reset();
+        
+        while (not done):
+            a = RLPolicy(state, env.k);
+            state, r, done, info = env.step(a);
+            sumRate += r;
+            episodeLength += 1;
+            
+        meanRateListRLPolicy.append(sumRate/episodeLength);
+    
+    # plot results    
+    fig, ax = plt.subplots(figsize=(10, 15))
+    ax.hist(np.log(meanRateListMaxSINR), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(np.log(meanRateListMaxSharedRate), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(np.log(meanRateListRLPolicy), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    
+    # tidy up the figure
+    ax.grid(True)
+    ax.legend(('max SINR', 'max shared rate', 'RL'), loc='right')
+    ax.set_title('Average Rate Per Episode Histogram')
+    ax.set_xlabel('Average Rate (bps)')
+    ax.set_ylabel('Likelihood of occurrence')
+    
+    plt.show()
+    
+        
+
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 1e-5;
+    lambdaUE = 1e-5; # 1e-5
     networkArea = 5e7;
     k = 8;
-    episodeLength = 3;
-    handoffDuration = 0;
+    
+    # be careful to choose the parameters below carefully
+    # e.g. I want the UE to experience roughly 4 handoffs per episode
+    # the velocity is 20meters/s = 76 km/h. If the BS density is 3BS/km^2, 
+    # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
+    # the episode should then cover around 2400m, or 120s given the velocity
+    # if the episode length is of 60 steps, then deltaT should be 2s.
+    episodeLength = 60; # 60 steps
+    handoffDuration = 0; # 2 steps
+    velocity = 0; # 20 meters per second
+    deltaT = 2;
 
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
     gamma = 1.
-    alpha = 3e-4
+    stepSize = 3e-4
 
     pi = PiApproximationWithNN(
     2*env.k,
     env.action_space.n,
-    alpha)
+    stepSize)
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 50000, pi,B)
+    G = REINFORCE(env, gamma, 10000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -134,7 +235,9 @@ if __name__ == "__main__":
     print(value.data.numpy())
     # plt.plot(G)
     # plt.savefig("help.eps")
-    aa = obs.data.numpy()[0:k];
-    bb = obs.data.numpy()[k:2*k];
-    print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
+    #aa = obs.data.numpy()[0:k];
+    #bb = obs.data.numpy()[k:2*k];
+    #print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
+    
+    evaluatePolicyPerformance(env, pi, 2000);
 
