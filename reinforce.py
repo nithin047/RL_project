@@ -105,9 +105,9 @@ V:Baseline) -> Iterable[float]:
 def train_and_save():
     lambdaBS = 3e-6;
     lambdaUE = 3e-5;
-    networkArea = 1e7;
+    networkArea = 1e8;
     k = 10;
-    episodeLength = 20;
+    episodeLength = 5;
 
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
@@ -121,7 +121,7 @@ def train_and_save():
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 100000, pi,B)
+    G = REINFORCE(env, gamma, 300000, pi,B)
     
     #saving the trained policy network
     torch.save(pi.model, "policy_network.pt")

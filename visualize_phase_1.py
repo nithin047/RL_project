@@ -40,7 +40,7 @@ def assignBSIDs(env, networkLength):
 
 if __name__ == "__main__":
 
-    model = torch.load("policy_network.pt")
+    model = torch.load("policy_network_94.pt")
     model.eval()
 
     lambdaBS = 3e-6;
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
     env.reset()
-    #networkLength = 5
+    #networkLength = 1000
     networkLength = int(np.sqrt(networkArea))
     #assume that one square meter is an entry in the data matrix
     #data(i, j) = the id of the BS that a user at coordinates (i, j) will associate to in the network
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     #data = np.random.rand(networkLength, networkLength) * numColors
     data = assignBSIDs(env, networkLength)
 
-    cmap = cm.get_cmap('viridis', numColors)
+    cmap = cm.get_cmap('PiYG', numColors)
     bounds = range(numColors+1)
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
