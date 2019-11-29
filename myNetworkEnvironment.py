@@ -67,7 +67,7 @@ class myNetworkEnvironment(gym.Env):
         if (self.myNetwork.isRateZero()):
             self.currentRate = 0;
         else:
-            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
+            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[action]]+1);
 
         self.currentAction = action;
         self.myNetwork.stepForward(self.taggedUEId);
@@ -81,7 +81,7 @@ class myNetworkEnvironment(gym.Env):
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
             currentBSId = self.taggedUEKClosestBS[i];
-            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
     
     def reset(self):
         # Reset the state of the environment to an initial state
@@ -94,6 +94,7 @@ class myNetworkEnvironment(gym.Env):
         
         # tagged user coordinates
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
+        self.taggedCoordInit = self.myNetwork.UELocation[self.taggedUEId, :];
         
         # get list of k closest BSs from tagged user
         self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
@@ -103,7 +104,35 @@ class myNetworkEnvironment(gym.Env):
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
             currentBSId = self.taggedUEKClosestBS[i];
-            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1000);
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
+
+        #self.taggedUERates = np.random.permutation(self.taggedUERates)
+        
+        # set current step to 0
+        self.currentStep = 0;
+        
+        # return initial state
+        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
+    
+    def repeat(self):
+        # Reset the state of the environment to last initial state
+        # Uses last network object
+        
+        self.myNetwork.timeSinceLastHandoff = self.myNetwork.handoffDuration + 1; # time the last handoff started 
+        self.myNetwork.currentBS = -1;
+        
+        # tagged user coordinates
+        self.taggedCoord = self.taggedCoordInit
+        
+        # get list of k closest BSs from tagged user
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+                                                       self.taggedCoord[1])[0];
+        
+        # compute capacities received from k closest BSs
+        self.taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = self.taggedUEKClosestBS[i];
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
 
         #self.taggedUERates = np.random.permutation(self.taggedUERates)
         
