@@ -108,7 +108,7 @@ if __name__ == "__main__":
     lambdaUE = 1e-5;
     networkArea = 5e7;
     k = 8;
-    episodeLength = 3;
+    episodeLength = 5;
 
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, episodeLength)
@@ -124,13 +124,13 @@ if __name__ == "__main__":
 
     G = REINFORCE(env, gamma, 60000, pi,B)
     obs = env.reset()
-    print(obs)
-    print("Position of max SINR in SNR array")
-    print(np.argmax(obs))
+    print("Position of max per user SINR in array")
+    print(np.argmax(np.divide(obs[0:k], obs[k+1:])))
     obs = torch.from_numpy(obs)
     value = pi.model(obs.float())
     print("probability vector")
     print(value.data.numpy())
     # plt.plot(G)
     # plt.savefig("help.eps")
+    torch.save(pi.model, "policy_network_phase_2.pt")
 
