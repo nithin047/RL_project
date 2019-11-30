@@ -55,7 +55,6 @@ class maxSINRPolicy():
     def __call__(self, state) -> int:
         # assume state space is only the SINR from k closest BS
         action = np.argmax(state[0:self.k]);
-        assert action == 0
         return action;
     
 class maxSharedRatePolicy():
@@ -193,8 +192,23 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
     
     plt.show()
     
+    # plot results    
+    fig, ax = plt.subplots(figsize=(15, 10))
+    ax.hist(meanRateListMaxSINR, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(meanRateListMaxSharedRate, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(meanRateListRLPolicy, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    
+    # tidy up the figure
+    ax.grid(True)
+    ax.legend(('max SINR', 'max shared rate', 'RL'), loc='right')
+    ax.set_title('Average Rate Per Episode Histogram')
+    ax.set_xlabel('Average Rate (bps)')
+    ax.set_ylabel('Likelihood of occurrence')
+    
+    plt.show()
+    
     print("mean rate max sinr = ", np.mean(meanRateListMaxSINR))
-    print("mean rate max shares rate = ", np.mean(meanRateListMaxSharedRate))
+    print("mean rate max shared rate = ", np.mean(meanRateListMaxSharedRate))
     print("mean rate RL = ", np.mean(meanRateListRLPolicy))
     
         
@@ -202,8 +216,8 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 0.6e-5; # 1e-5
-    networkArea = 3e7;
+    lambdaUE = 1e-5; # 1e-5
+    networkArea = 4e7;
     k = 8;
     
     # be careful to choose the parameters below carefully
@@ -212,7 +226,7 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 60; # 60 steps
+    episodeLength = 3; # 60 steps
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
     deltaT = 2;
@@ -229,7 +243,7 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    #G = REINFORCE(env, gamma, 10000, pi,B)
+    G = REINFORCE(env, gamma, 100000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
