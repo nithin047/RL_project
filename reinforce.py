@@ -44,6 +44,7 @@ class PiApproximationWithNN():
         pi = self.model(s.float())
         pi_A_t = pi[a]
         loss = - gamma_t * delta * torch.log(pi_A_t)
+
         loss.backward()
         self.optimizer.step()
         
@@ -58,13 +59,13 @@ class maxSINRPolicy():
         return action;
     
 class maxSharedRatePolicy():
-    #this class defines the greedy max SINR policy
+    #this class defines the greedy max per user SINR policy
     def __init__(self, k):
         self.k = k
 
     def __call__(self, state) -> int:
         # assume state space is only the SINR from k closest BS
-        action = np.argmax(state[0:self.k]/(state[self.k:2*self.k]+1));
+        action = np.argmax(state[0:self.k]/(state[self.k:]+1));
         return action
 
 class Baseline(object):
@@ -215,10 +216,10 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
 
 if __name__ == "__main__":
 
-    lambdaBS = 3e-6;
-    lambdaUE = 1e-5; # 1e-5
-    networkArea = 4e7;
-    k = 8;
+    lambdaBS = 3e-6
+    lambdaUE = 1e-5
+    networkArea = 4e7
+    k = 8
     
     # be careful to choose the parameters below carefully
     # e.g. I want the UE to experience roughly 4 handoffs per episode
@@ -226,7 +227,7 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 3; # 60 steps
+    episodeLength = 5; # 60 steps
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
     deltaT = 2;
@@ -243,7 +244,10 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 100000, pi,B)
+    G = REINFORCE(env, gamma, 60000, pi, B)
+    torch.save(pi.model, "model_phase3.pt")
+
+    """
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -252,11 +256,12 @@ if __name__ == "__main__":
     value = pi.model(obs.float())
     print("probability vector")
     print(value.data.numpy())
+    """
     # plt.plot(G)
     # plt.savefig("help.eps")
     #aa = obs.data.numpy()[0:k];
     #bb = obs.data.numpy()[k:2*k];
     #print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     
-    evaluatePolicyPerformance(env, pi, 1000);
+    #evaluatePolicyPerformance(env, pi, 1000);
 
