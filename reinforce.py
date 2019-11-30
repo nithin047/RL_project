@@ -123,14 +123,17 @@ if __name__ == "__main__":
     B = Baseline(0.)
 
     G = REINFORCE(env, gamma, 60000, pi,B)
+
+    torch.save(pi.model, "policy_network_phase_2.pt")
+
     obs = env.reset()
     print("Position of max per user SINR in array")
-    print(np.argmax(np.divide(obs[0:k], obs[k+1:])))
+    print(np.argmax(np.divide(obs[0:k], obs[k:])))
     obs = torch.from_numpy(obs)
     value = pi.model(obs.float())
     print("probability vector")
     print(value.data.numpy())
     # plt.plot(G)
     # plt.savefig("help.eps")
-    torch.save(pi.model, "policy_network_phase_2.pt")
+    
 
