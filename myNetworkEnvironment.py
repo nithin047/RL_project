@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Nov 17 18:20:32 2019
-
-@author: Saadallah
-"""
-
 import gym
 from gym import spaces
 from network import Network
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.neighbors import NearestNeighbors
 
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator

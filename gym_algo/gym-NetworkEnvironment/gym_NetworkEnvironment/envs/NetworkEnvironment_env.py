@@ -19,7 +19,6 @@ class Network(object):
         self.numberOfUE = 0; # number of UEs in the network
         self.UELocation = np.zeros((1,2)); # X-Y coordinates of UEs in network
         self.UEMotionDirection = np.zeros((1,1)); # angles from 0-2pi of motion directions 
-        self.BSLoads = np.zeros(self.numberOfBS) # load of each BS
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -43,6 +42,10 @@ class Network(object):
         # angles from 0-2pi of motion directions 
         self.UEMotionDirection = np.random.rand(self.numberOfUE, 1)*2*np.pi; 
         
+        # Determine load of each BS
+        self.BSLoads = np.zeros(self.numberOfBS) # load of each BS
+        self.getVoronoiLoads();
+        
     def trainKNearestBSModel(self, k): 
         # this function trains the KNN model on BS locations data
         # call this function (once) before calling kClosestBS function
@@ -57,6 +60,17 @@ class Network(object):
         dist, ind = self.neighborsModel.kneighbors(np.array([x, y]).reshape(1, -1))
         
         return ind
+    
+    def getVoronoiLoads(self):
+        # returns loads of each BS assuming Voronoi association
+        
+        voronoiModel = NearestNeighbors(n_neighbors=1);
+        voronoiModel.fit(self.BSLocation); 
+        
+        # the loads no NOT include the tagged UE!!
+        for i in range(1, self.numberOfUE):
+            dist, ind = voronoiModel.kneighbors(self.UELocation[i, :].reshape(1, -1));
+            self.BSLoads[ind] += 1;
             
 
     
@@ -113,7 +127,7 @@ class Network(object):
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
         
-    def __init__(self, lambdaBS=3e-6, lambdaUE=3e-5, networkArea=1e8, k=10, episodeLength=5):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, k, episodeLength):
         # Constructor function
         # k: number of closest BSs to consider in the action space
         
@@ -130,10 +144,7 @@ class myNetworkEnvironment(gym.Env):
         # Define State Space, or observation space
         # There are k features in state space, where feature i corresponds to
         # the capacity received by BS i
-        #defining limits for the observation space
-        self.high = np.ones(k) * np.finfo(np.float32).max
-        self.low = np.zeros(k)
-        self.observation_space = spaces.Box(self.low, self.high, dtype=np.float32)
+        self.observation_space = spaces.Discrete(k); #DOUBLE CHECK THIS
         
         # Create an empty network object
         self.myNetwork = Network(lambdaBS, lambdaUE, networkArea);
@@ -153,13 +164,13 @@ class myNetworkEnvironment(gym.Env):
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
-        obs = self.taggedUERates;
+        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
         
         return obs, reward, done, {}
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action];
+        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
         self.currentAction = action;
                 
     
@@ -179,40 +190,26 @@ class myNetworkEnvironment(gym.Env):
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
         
         # get list of k closest BSs from tagged user
-        taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
                                                        self.taggedCoord[1])[0];
         
         # compute capacities received from k closest BSs
         self.taggedUERates = np.zeros(self.k);
         for i in range(self.k):
-            currentBSId = taggedUEKClosestBS[i];
+            currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
-        self.taggedUERates = np.random.permutation(self.taggedUERates)
+
+        # rng_state = np.random.get_state()
+        # np.random.shuffle(self.taggedUERates)
+        # np.random.set_state(rng_state)
+        # np.random.shuffle(self.myNetwork.BSLoads)
         
         # set current step to 0
         self.currentStep = 0;
         
         # return initial state
-        return self.taggedUERates;
-
-    def getKClosestBS(self, UECoordinates):
-        #returns a 2-D array, of size [k, 2]. The first row has rate values, and the second consists of unique BS IDs corresponding to those values. 
-
-        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
-        taggedUERates = np.zeros(self.k);
-        for i in range(self.k):
-            currentBSId = taggedUEKClosestBS[i];
-            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
-
-        return_array = []
-        return_array.append(taggedUERates)
-        return_array.append(taggedUEKClosestBS)
-
-        return np.asarray(return_array)
-
-
-
+        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
