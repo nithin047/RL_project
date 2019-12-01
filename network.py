@@ -50,7 +50,7 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
-        
+        #self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/8, (self.numberOfUE, 2))
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
         self.UEMotionDirection = np.random.rand(self.numberOfUE, 1)*2*np.pi; 
@@ -65,7 +65,6 @@ class Network(object):
         self.k = k;
         self.neighborsModel = NearestNeighbors(n_neighbors=self.k);
         self.neighborsModel.fit(self.BSLocation); 
-                
 
     def kClosestBS(self, x, y):
         # returns BS id of k nearest BSs of point X-Y
@@ -165,15 +164,15 @@ class Network(object):
 
 # outdated function calls
 if __name__ == "__main__":
-    myNetwork = Network(3e-6, 3e-5, 1e7, 2);
+    myNetwork = Network(3e-6, 3e-5, 1e7, 2, 0, 1);
     myNetwork.generateNetwork();
     myNetwork.showNetwork();
-    myNetwork.trainKNearestBSModel(3);
-    print(myNetwork.kClosestBS(1000, 1000))
+    #myNetwork.trainKNearestBSModel(3);
+    #print(myNetwork.kClosestBS(1000, 1000))
     
-    print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
-    print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
+    #print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
+    #print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
     
-    print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
-    print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
+    #print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
+    #print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
     

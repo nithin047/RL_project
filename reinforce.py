@@ -21,7 +21,7 @@ class PiApproximationWithNN():
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -31,6 +31,10 @@ class PiApproximationWithNN():
         value = self.model(s.float())
         prob_array = value.data.numpy()
         action_array = range(k)
+        
+        if np.any(np.isnan(prob_array)):
+            print("error")
+        
 
         action = np.random.choice(action_array, p=prob_array)
 
@@ -217,8 +221,8 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 1e-5; # 1e-5
-    networkArea = 4e7;
-    k = 8;
+    networkArea = 0.7e7;
+    k = 5;
     
     # be careful to choose the parameters below carefully
     # e.g. I want the UE to experience roughly 4 handoffs per episode
@@ -226,24 +230,24 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 3; # 60 steps
+    episodeLength = 5; # 60 steps
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
     deltaT = 2;
 
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
-    gamma = 1.
-    stepSize = 3e-4
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength);
+    gamma = 1.;
+    stepSize = 3e-4;
 
     pi = PiApproximationWithNN(
     2*env.k,
     env.action_space.n,
     stepSize)
 
-    B = Baseline(0.)
+    B = Baseline(30.)
 
-    G = REINFORCE(env, gamma, 100000, pi,B)
+    G = REINFORCE(env, gamma, 10000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -258,5 +262,5 @@ if __name__ == "__main__":
     #bb = obs.data.numpy()[k:2*k];
     #print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     
-    evaluatePolicyPerformance(env, pi, 1000);
+    evaluatePolicyPerformance(env, pi, 800);
 
