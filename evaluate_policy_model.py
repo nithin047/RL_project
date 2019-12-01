@@ -16,8 +16,8 @@ if __name__ == "__main__":
 
 
     #train_and_save()
-    model = torch.load("policy_network.pt")
-    model.eval()
+    model = torch.load("policy_network_93.pt")
+    #model.eval()
 
     accuracy_array = []
 
