@@ -64,7 +64,7 @@ class maxSharedRatePolicy():
 
     def __call__(self, state) -> int:
         # assume state space is only the SINR from k closest BS
-        action = np.argmax(state[0:self.k]/(state[self.k:2*self.k]+1));
+        action = np.argmax(state[0:self.k]);
         return action
 
 class Baseline(object):
@@ -146,7 +146,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
             episodeLength += 1;
             
         meanRateListMaxSINR.append(sumRate/episodeLength);
-        
+        #print('a')
         # then max shared rate policy
         
         done = False;
@@ -161,7 +161,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
             episodeLength += 1;
             
         meanRateListMaxSharedRate.append(sumRate/episodeLength);
-        
+        #print('b')
         # then RL policy
         
         done = False;
@@ -176,6 +176,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
             episodeLength += 1;
             
         meanRateListRLPolicy.append(sumRate/episodeLength);
+        #print('c')
     
     # plot results    
     fig, ax = plt.subplots(figsize=(15, 10))
@@ -216,9 +217,9 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 1e-5; # 1e-5
+    lambdaUE = 0.8e-5; # 1e-5
     networkArea = 4e7;
-    k = 8;
+    k = 5;
     
     # be careful to choose the parameters below carefully
     # e.g. I want the UE to experience roughly 4 handoffs per episode
@@ -226,7 +227,7 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 3; # 60 steps
+    episodeLength = 10; # 60 steps
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
     deltaT = 2;
@@ -237,13 +238,13 @@ if __name__ == "__main__":
     stepSize = 3e-4
 
     pi = PiApproximationWithNN(
-    2*env.k,
+    env.k,
     env.action_space.n,
     stepSize)
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 100000, pi,B)
+    G = REINFORCE(env, gamma, 10000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -258,5 +259,5 @@ if __name__ == "__main__":
     #bb = obs.data.numpy()[k:2*k];
     #print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     
-    evaluatePolicyPerformance(env, pi, 1000);
+    evaluatePolicyPerformance(env, pi, 800);
 
