@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 0.8e-5; # 1e-5
-    networkArea = 4e7;
+    networkArea = 2e7;
     k = 5;
     
     # be careful to choose the parameters below carefully
@@ -242,9 +242,9 @@ if __name__ == "__main__":
     env.action_space.n,
     stepSize)
 
-    B = Baseline(0.)
+    B = Baseline(30.)
 
-    G = REINFORCE(env, gamma, 10000, pi,B)
+    G = REINFORCE(env, gamma, 5000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
