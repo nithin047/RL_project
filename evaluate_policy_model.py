@@ -8,7 +8,6 @@ from tqdm import trange
 from myNetworkEnvironment import myNetworkEnvironment
 import matplotlib.pyplot as plt
 from typing import Iterable
-from reinforce import train_and_save
 
 
 if __name__ == "__main__":
@@ -16,15 +15,15 @@ if __name__ == "__main__":
 
 
     #train_and_save()
-    model = torch.load("policy_network_phase3.pt")
+    model = torch.load("model_phase3_v2.pt")
     model.eval()
 
     accuracy_array = []
 
     lambdaBS = 3e-6;
-    lambdaUE = 3e-5;
+    lambdaUE = 5e-6;
     networkArea = 1e7;
-    k = 10;
+    k = 8;
     episodeLength = 20;
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
@@ -37,8 +36,9 @@ if __name__ == "__main__":
 
 
         obs = env.reset()
-        k = len(obs)
-        maxPerUserSINRPostion = np.argmax(np.divide(obs[0:k], obs[k+1:]))
+        k = int(len(obs)/2)
+        #maxPerUserSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:]+1))
+        maxPerUserSINRPostion = np.argmax(obs[0:k])
 
         obs_torch = torch.from_numpy(obs)
         value = model(obs_torch.float())

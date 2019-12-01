@@ -72,7 +72,7 @@ class myNetworkEnvironment(gym.Env):
         if (self.myNetwork.isRateZero()):
             self.currentRate = 0;
         else:
-            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[action]]+1)
+            self.currentRate = (self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[action]]+1))
             #self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation[action]]]+1);
 
         self.currentAction = action;

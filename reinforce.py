@@ -217,8 +217,8 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
 if __name__ == "__main__":
 
     lambdaBS = 3e-6
-    lambdaUE = 1e-5
-    networkArea = 4e7
+    lambdaUE = 5e-6
+    networkArea = 1e7
     k = 8
     
     # be careful to choose the parameters below carefully
@@ -227,7 +227,7 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 5; # 60 steps
+    episodeLength = 7; # 60 steps
     handoffDuration = 0; # 2 steps
     velocity = 0; # 20 meters per second
     deltaT = 2;
@@ -244,8 +244,8 @@ if __name__ == "__main__":
 
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 60000, pi, B)
-    torch.save(pi.model, "model_phase3.pt")
+    G = REINFORCE(env, gamma, 300000, pi, B)
+    torch.save(pi.model, "model_phase3_v2.pt")
 
     """
     obs = env.reset()
