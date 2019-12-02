@@ -17,11 +17,11 @@ class PiApproximationWithNN():
                  alpha = 3e-4):
         #initializing the neural network
         self.n_in = state_dims
-        self.n_h = 16
+        self.n_h = 32
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -47,7 +47,7 @@ class PiApproximationWithNN():
         s = (torch.from_numpy(s))
         pi = self.model(s.float())
         pi_A_t = pi[a]
-        loss = - gamma_t * delta * torch.log(pi_A_t)
+        loss = - self.alpha * gamma_t * delta * torch.log(pi_A_t)
         loss.backward()
         self.optimizer.step()
         
@@ -220,8 +220,8 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 1e-5; # 1e-5
-    networkArea = 0.7e7;
+    lambdaUE = 0.8e-5; # 1e-5
+    networkArea = 0.9e7;
     k = 5;
     
     # be careful to choose the parameters below carefully
@@ -245,9 +245,9 @@ if __name__ == "__main__":
     env.action_space.n,
     stepSize)
 
-    B = Baseline(30.)
+    B = Baseline(50.)
 
-    G = REINFORCE(env, gamma, 10000, pi,B)
+    G = REINFORCE(env, gamma, 2000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -261,6 +261,7 @@ if __name__ == "__main__":
     #aa = obs.data.numpy()[0:k];
     #bb = obs.data.numpy()[k:2*k];
     #print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
+    print(pi.model(torch.from_numpy(np.array([100, 99, 98, 97, 96, 5, 2, 6, 0, 8])).float()))
     
     evaluatePolicyPerformance(env, pi, 800);
 
