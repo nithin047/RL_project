@@ -152,7 +152,7 @@ class Network(object):
         # Returns true if the tagged UE currently receives 0 rate
         
         if (self.timeSinceLastHandoff > self.handoffDuration):
-            return True;
+            return False;
         else:
             return False;
 

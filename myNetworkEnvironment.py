@@ -64,7 +64,7 @@ class myNetworkEnvironment(gym.Env):
         if (self.myNetwork.isRateZero()):
             self.currentRate = 0;
         else:
-            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
+            self.currentRate = self.taggedUERates[action]/(self.loadVector[action] +1);
 
         self.currentAction = action;
     
@@ -94,12 +94,14 @@ class myNetworkEnvironment(gym.Env):
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
         self.taggedUERates = np.random.permutation(self.taggedUERates)
+        self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
         
         # set current step to 0
         self.currentStep = 0;
         
         # return initial state
-        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
+        return np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
+    
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
