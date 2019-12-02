@@ -17,7 +17,7 @@ class PiApproximationWithNN():
                  alpha = 3e-4):
         #initializing the neural network
         self.n_in = state_dims
-        self.n_h = 16
+        self.n_h = 10
         self.n_out = num_actions
         self.alpha = alpha
 
@@ -48,6 +48,26 @@ class PiApproximationWithNN():
         loss = - self.alpha * gamma_t * delta * torch.log(pi_A_t)
         loss.backward()
         self.optimizer.step()
+
+class maxSINRPolicy():
+    #this class defines the greedy max SINR policy
+    def __init__(self, k):
+        self.k = k;
+
+    def __call__(self, state) -> int:
+        # assume state space is only the SINR from k closest BS
+        action = np.argmax(state[0:self.k]);
+        return action;
+    
+class maxSharedRatePolicy():
+    #this class defines the greedy max SINR policy
+    def __init__(self, k):
+        self.k = k
+
+    def __call__(self, state) -> int:
+        # assume state space is only the SINR from k closest BS
+        action = np.argmax(state[0:self.k]/(state[self.k:2*self.k]+1));
+        return action
 
 class Baseline(object):
     #naive implementation of a zero baseline. Using the state values as baseline resulted in very unstable policies, so I think
@@ -102,12 +122,103 @@ V:Baseline) -> Iterable[float]:
 
     return G_list
 
+def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
+    
+    myMaxSINRPolicy = maxSINRPolicy(env.k);
+    myMaxSharedRatePolicy = maxSharedRatePolicy(env.k);
+    
+    meanRateListMaxSINR = list(); # list storing mean rate per episode for max sinr policy
+    meanRateListMaxSharedRate = list(); # list storing mean rate per episode for max sinr policy
+    meanRateListRLPolicy = list(); # list storing mean rate per episode for learnt policy
+    
+    # start with max sinr policy
+    for epi in range(nEpisodes):
+                
+        # start with max SINR policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state = env.reset();
+        
+        while (not done):
+            a = myMaxSINRPolicy(state);
+            state, reward, done, info = env.step(a);
+            sumRate += reward;
+            episodeLength += 1;
+            
+        meanRateListMaxSINR.append(sumRate/episodeLength);
+        
+        # then max shared rate policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state = env.reset();
+        
+        while (not done):
+            a = myMaxSharedRatePolicy(state);
+            state, reward, done, info = env.step(a);
+            sumRate += reward;
+            episodeLength += 1;
+            
+        meanRateListMaxSharedRate.append(sumRate/episodeLength);
+        
+        # then RL policy
+        
+        done = False;
+        sumRate = 0;
+        episodeLength = 0;
+        state= env.reset();
+        
+        while (not done):
+            a = RLPolicy(state, env.k);
+            state, reward, done, info = env.step(a);
+            sumRate += reward;
+            episodeLength += 1;
+            
+        meanRateListRLPolicy.append(sumRate/episodeLength);
+    
+    # plot results    
+    fig, ax = plt.subplots(figsize=(15, 10))
+    ax.hist(np.log(meanRateListMaxSINR), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(np.log(meanRateListMaxSharedRate), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(np.log(meanRateListRLPolicy), density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    
+    # tidy up the figure
+    ax.grid(True)
+    ax.legend(('max SINR', 'max shared rate', 'RL'), loc='right')
+    ax.set_title('Average Rate Per Episode Histogram')
+    ax.set_xlabel('Average Rate (bps)')
+    ax.set_ylabel('Likelihood of occurrence')
+    
+    plt.show()
+    
+    # plot results    
+    fig, ax = plt.subplots(figsize=(15, 10))
+    ax.hist(meanRateListMaxSINR, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(meanRateListMaxSharedRate, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    ax.hist(meanRateListRLPolicy, density=True, histtype='step', bins = 'auto', cumulative=True, linewidth = 4)
+    
+    # tidy up the figure
+    ax.grid(True)
+    ax.legend(('max SINR', 'max shared rate', 'RL'), loc='right')
+    ax.set_title('Average Rate Per Episode Histogram')
+    ax.set_xlabel('Average Rate (bps)')
+    ax.set_ylabel('Likelihood of occurrence')
+    
+    plt.show()
+    
+    print("mean rate max sinr = ", np.mean(meanRateListMaxSINR))
+    print("mean rate max shared rate = ", np.mean(meanRateListMaxSharedRate))
+    print("mean rate RL = ", np.mean(meanRateListRLPolicy))
+
 if __name__ == "__main__":
 
     lambdaBS = 3e-6;
-    lambdaUE = 1e-5;
-    networkArea = 5e7;
-    k = 8;
+    lambdaUE = 0.8e-5;
+    networkArea = 0.8e7;
+    k = 5;
     episodeLength = 3;
     handoffDuration = 0;
 
@@ -121,9 +232,9 @@ if __name__ == "__main__":
     env.action_space.n,
     alpha)
 
-    B = Baseline(0.)
+    B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 10000, pi,B)
+    G = REINFORCE(env, gamma, 20000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
@@ -137,4 +248,6 @@ if __name__ == "__main__":
     aa = obs.data.numpy()[0:k];
     bb = obs.data.numpy()[k:2*k];
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
+    print(pi.model(torch.from_numpy(np.array([0.100, 0.099, 0.098, 0.097, 0.096, 5, 2, 6, 0, 8])).float()))
 
+    evaluatePolicyPerformance(env, pi, 800);
