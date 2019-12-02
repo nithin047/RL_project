@@ -57,7 +57,7 @@ class myNetworkEnvironment(gym.Env):
         
         loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation]]+1;
         
-        obs = self.taggedUERates/np.transpose(loadVector);
+        obs = self.taggedUERates[self.randomPermutation]/np.transpose(loadVector);
         
         return obs, reward, done, {}
         
@@ -71,7 +71,7 @@ class myNetworkEnvironment(gym.Env):
             self.currentRate = 0;
             #self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation[action]]]+1);
         else:
-            self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation[action]]]+1);
+            self.currentRate = self.taggedUERates[self.randomPermutation[action]]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation[action]]]+1);
 
         self.currentAction = action;
         self.myNetwork.stepForward(self.taggedUEId);
@@ -86,9 +86,7 @@ class myNetworkEnvironment(gym.Env):
         for i in range(self.k):
             currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
-            
-        self.taggedUERates = self.taggedUERates[self.randomPermutation];
-    
+                
     def reset(self):
         # Reset the state of the environment to an initial state
         # Instantiate the network object
@@ -114,7 +112,6 @@ class myNetworkEnvironment(gym.Env):
         
         #self.randomPermutation = np.array(range(self.k));
         self.randomPermutation = np.random.permutation(self.k); #np.array(range(self.k));
-        self.taggedUERates = self.taggedUERates[self.randomPermutation];
         
         # set current step to 0
         self.currentStep = 0;
@@ -122,7 +119,7 @@ class myNetworkEnvironment(gym.Env):
         loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation]]+1;
         
         # return initial state
-        return self.taggedUERates/np.transpose(loadVector);
+        return self.taggedUERates[self.randomPermutation]/np.transpose(loadVector);
     
     def repeat(self):
         # Reset the state of the environment to last initial state
@@ -144,8 +141,6 @@ class myNetworkEnvironment(gym.Env):
             currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 100);
         
-        #self.randomPermutation = np.random.permutation(self.k);
-        self.taggedUERates = self.taggedUERates[self.randomPermutation];
         
         # set current step to 0
         self.currentStep = 0;
@@ -153,7 +148,7 @@ class myNetworkEnvironment(gym.Env):
         loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS[self.randomPermutation]]+1;
         
         # return initial state
-        return self.taggedUERates/np.transpose(loadVector);
+        return self.taggedUERates[self.randomPermutation]/np.transpose(loadVector);
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
