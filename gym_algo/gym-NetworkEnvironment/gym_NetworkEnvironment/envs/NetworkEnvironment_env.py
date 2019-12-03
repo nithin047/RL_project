@@ -144,7 +144,9 @@ class myNetworkEnvironment(gym.Env):
         # Define State Space, or observation space
         # There are k features in state space, where feature i corresponds to
         # the capacity received by BS i
-        self.observation_space = spaces.Discrete(k); #DOUBLE CHECK THIS
+        self.high = np.ones(2*k) * np.finfo(np.float32).max
+        self.low = np.zeros(2*k)
+        self.observation_space = spaces.Box(self.low, self.high, dtype=np.float32)
         
         # Create an empty network object
         self.myNetwork = Network(lambdaBS, lambdaUE, networkArea);
@@ -170,7 +172,7 @@ class myNetworkEnvironment(gym.Env):
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[action]+1);
+        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[action]]+1);
         self.currentAction = action;
                 
     
@@ -201,7 +203,7 @@ class myNetworkEnvironment(gym.Env):
 
 
         # rng_state = np.random.get_state()
-        # np.random.shuffle(self.taggedUERates)
+        np.random.shuffle(self.taggedUERates)
         # np.random.set_state(rng_state)
         # np.random.shuffle(self.myNetwork.BSLoads)
         

@@ -8,7 +8,7 @@ from tqdm import trange
 from myNetworkEnvironment import myNetworkEnvironment
 import matplotlib.pyplot as plt
 from typing import Iterable
-from reinforce import train_and_save
+
 
 
 if __name__ == "__main__":
@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
 
     #train_and_save()
-    model = torch.load("ppo_model_v1.pt")[0]
+    model = torch.load("ppo_model_v2.pt")[0]
     model = model.float()
     #model.eval()
 
@@ -25,7 +25,7 @@ if __name__ == "__main__":
     lambdaBS = 3e-6;
     lambdaUE = 3e-5;
     networkArea = 1e7;
-    k = 10;
+    k = 5;
     episodeLength = 20;
 
     #create the environment
@@ -35,8 +35,8 @@ if __name__ == "__main__":
 
 
         obs = env.reset()
-        k = len(obs)
-        maxSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:]))
+        k = int(len(obs)/2)
+        maxSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:]+1))
 
         obs_torch = torch.from_numpy(obs)
         _, sampledSINRPosition, _, _ = model.act(obs_torch.float(), None, None)
