@@ -132,7 +132,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
     meanRateListRLPolicy = list(); # list storing mean rate per episode for learnt policy
     
     # start with max sinr policy
-    for epi in range(nEpisodes):
+    for epi in trange(nEpisodes):
                 
         # start with max SINR policy
         
@@ -234,8 +234,13 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 120000, pi,B)
+    G = REINFORCE(env, gamma, 500000, pi,B)
     obs = env.reset()
+
+    model_name = str(sys.argv[1])
+
+    torch.save(pi.model, model_name)
+
     print(obs)
     print("Position of max SINR in SNR array")
     print(np.argmax(obs))

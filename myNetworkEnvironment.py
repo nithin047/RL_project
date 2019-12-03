@@ -64,7 +64,7 @@ class myNetworkEnvironment(gym.Env):
         if (self.myNetwork.isRateZero()):
             self.currentRate = 0;
         else:
-            self.currentRate = self.taggedUERates[action]/(self.loadVector[action] +1);
+            self.currentRate = self.taggedUERates[action]/(self.loadVector[action]+1);
 
         self.currentAction = action;
     
@@ -96,6 +96,8 @@ class myNetworkEnvironment(gym.Env):
         self.randomPermutation = np.random.permutation(self.k);        
         self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
         
+        self.taggedUERatesNonPermuted = np.copy(self.taggedUERates)
+
         self.taggedUERates = self.taggedUERates[self.randomPermutation];
         #self.loadVector = self.loadVector[self.randomPermutation];
         
@@ -104,6 +106,41 @@ class myNetworkEnvironment(gym.Env):
         
         # return initial state
         return np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
+
+    def getKClosestBSSINR(self, UECoordinates):
+        #returns a 2-D array, of size [2, k]. The first row has rate values, and the second consists of unique BS IDs corresponding to those values. 
+
+        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
+        taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = taggedUEKClosestBS[i];
+            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
+
+        return_array = []
+        return_array.append(taggedUERates)
+        return_array.append(taggedUEKClosestBS)
+
+        return np.asarray(return_array)
+
+    def getKClosestBSSINRShared(self, UECoordinates):
+        #returns a 2-D array, of size [3, k]. The first row has rate values, the second has the user loads for those BSs,
+        #and the third consists of unique BS IDs corresponding to those values. 
+
+        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
+        taggedUERates = np.zeros(self.k);
+        taggedUEBSLoads = np.zeros(self.k);
+
+        for i in range(self.k):
+            currentBSId = taggedUEKClosestBS[i];
+            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
+            taggedUEBSLoads[i] = self.myNetwork.BSLoads[taggedUEKClosestBS]
+
+        return_array = []
+        return_array.append(taggedUERates)
+        return_array.append(taggedUEBSLoads)
+        return_array.append(taggedUEKClosestBS)
+
+        return np.asarray(return_array)
     
     
     def render(self): #MODIFY THIS!
