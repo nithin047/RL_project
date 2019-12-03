@@ -217,7 +217,7 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 0.8e-5;
-    networkArea = 0.8e7;
+    networkArea = 1e7;
     k = 5;
     episodeLength = 3;
     handoffDuration = 0;
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 20000, pi,B)
+    G = REINFORCE(env, gamma, 120000, pi,B)
     obs = env.reset()
     print(obs)
     print("Position of max SINR in SNR array")
