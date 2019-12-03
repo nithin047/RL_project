@@ -250,4 +250,4 @@ if __name__ == "__main__":
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     print(pi.model(torch.from_numpy(np.array([0.100, 0.099, 0.098, 0.097, 0.096, 5, 2, 6, 0, 8])).float()))
 
-    evaluatePolicyPerformance(env, pi, 800);
+    evaluatePolicyPerformance(env, pi, 10000);
