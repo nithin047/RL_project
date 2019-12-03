@@ -51,7 +51,7 @@ class myNetworkEnvironment(gym.Env):
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
-        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
+        obs = np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
         
         return obs, reward, done, {}
         
@@ -93,8 +93,11 @@ class myNetworkEnvironment(gym.Env):
             currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
-        self.taggedUERates = np.random.permutation(self.taggedUERates)
+        self.randomPermutation = np.random.permutation(self.k);        
         self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
+        
+        self.taggedUERates = self.taggedUERates[self.randomPermutation];
+        #self.loadVector = self.loadVector[self.randomPermutation];
         
         # set current step to 0
         self.currentStep = 0;
