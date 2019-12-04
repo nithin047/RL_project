@@ -131,4 +131,10 @@ if __name__ == "__main__":
     voronoi_plot_2d(vor, show_vertices = False)
     plt.savefig("ground_truth.eps")
 
+    np.savetxt("./visualization_data/flipped_BSLocations.txt", flipped_BSLocations)
+    np.savetxt("./visualization_data/data.txt", data)
+    np.savetxt("./visualization_data/X.txt", X)
+    np.savetxt("./visualization_data/Y.txt", Y)
+
+
 
