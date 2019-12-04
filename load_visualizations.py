@@ -19,11 +19,10 @@ if __name__ == "__main__":
 
     numColors = len(X)
 
-    #data = assignBSIDs(env, networkLength, model_name)
-
     cmap = cm.get_cmap('PiYG', numColors)
     bounds = range(numColors+1)
     norm = colors.BoundaryNorm(bounds, cmap.N)
+
 
     data = np.flipud(data)
     data = np.fliplr(data)
@@ -44,4 +43,5 @@ if __name__ == "__main__":
     ax1.set_xlim((0, 3000))
     ax1.set_ylim((0, 3000))
     voronoi_plot_2d(vor, ax = ax1, show_vertices = False)
+
     plt.savefig("ground_truth.eps")
