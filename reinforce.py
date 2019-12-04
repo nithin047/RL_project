@@ -237,13 +237,13 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 70000, pi,B)
+    #G = REINFORCE(env, gamma, 70000, pi,B)
 
     obs = env.reset()
 
-    model_name = str(sys.argv[1])
+    #model_name = str(sys.argv[1])
 
-    torch.save(pi.model, model_name)
+    #torch.save(pi.model, model_name)
 
     print(obs)
     print("Position of max SINR in SNR array")

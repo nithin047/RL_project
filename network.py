@@ -51,7 +51,7 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
-        #self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/8, (self.numberOfUE, 2))
+        self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/10, (self.numberOfUE, 2))
         
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
