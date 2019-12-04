@@ -139,8 +139,12 @@ if __name__ == "__main__":
     episodeLength = 3;
     handoffDuration = 0;
 
+    velocity = 0; # 20 meters per second
+    deltaT = 2;
+
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
+    
     model = torch.load(model_name)
 
     evaluate_and_plot_rate(env, model, 10000)
