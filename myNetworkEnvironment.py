@@ -115,6 +115,7 @@ class myNetworkEnvironment(gym.Env):
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
         self.randomPermutation = np.random.permutation(self.k);  
+        self.randomPermutation = np.array(range(self.k));  
         self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
         
         self.taggedUERatesNonPermuted = np.copy(self.taggedUERates)
