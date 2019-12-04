@@ -16,12 +16,18 @@ networkArea = 1e7;
 k = 10;
 episodeLength = 3;
 handoffDuration = 0;
+velocity = 0; # 20 meters per second
+deltaT = 2;
 
 #create the environment
-env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
+env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
 env.reset()
 BSLocations = env.myNetwork.BSLocation
-vor = Voronoi(BSLocations)
+flipped_BSLocations = []
+for ii in range(len(BSLocations)):
+    flipped_BSLocations.append(BSLocations[ii][::-1])
+
+vor = Voronoi(flipped_BSLocations)
 X = []
 Y = []
 for ii in range(len(BSLocations)):
