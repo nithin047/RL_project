@@ -237,13 +237,9 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 70000, pi,B)
+    G = REINFORCE(env, gamma, 50000, pi,B)
 
     obs = env.reset()
-
-    model_name = str(sys.argv[1])
-
-    torch.save(pi.model, model_name)
 
     print(obs)
     print("Position of max SINR in SNR array")
@@ -259,4 +255,7 @@ if __name__ == "__main__":
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     print(pi.model(torch.from_numpy(np.array([0.500, 0.499, 0.498, 0.497, 0.496, 5, 2, 6, 0, 8])).float()))
 
-    evaluatePolicyPerformance(env, pi, 1000);
+    evaluatePolicyPerformance(env, pi, 2000);
+    
+    model_name = str(sys.argv[1])
+    torch.save(pi.model, model_name)
