@@ -26,6 +26,7 @@ BSLocations = env.myNetwork.BSLocation
 flipped_BSLocations = []
 for ii in range(len(BSLocations)):
     flipped_BSLocations.append(BSLocations[ii][::-1])
+np.savetxt("./visualization_data/flipped_BSLocations.txt", flipped_BSLocations)
 
 vor = Voronoi(flipped_BSLocations)
 X = []
