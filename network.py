@@ -9,9 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
 
+from scipy.spatial import Voronoi, voronoi_plot_2d
+
 
 class Network(object):
-    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT):
         self.lambdaBS = lambdaBS; # intensity of base stations in BS/m^2
         self.lambdaUE = lambdaUE;
         self.networkArea = networkArea; # area of the network to be simulated
@@ -29,6 +31,8 @@ class Network(object):
         
         self.timeSinceLastHandoff = handoffDuration + 1; # time the last handoff started 
         self.currentBS = -1;
+        self.velocity = velocity;
+        self.deltaT = deltaT;
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -47,6 +51,7 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
+        #self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/8, (self.numberOfUE, 2))
         
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
@@ -122,14 +127,14 @@ class Network(object):
 
         return capacity
     
-    def getMobilityTrace(self, UEid, deltaT, velocity):
+    def getMobilityTrace(self, UEid):
         # This function returns the location of the UE UEid after deltaT time
         # assuming constant velocity v, and fixed environment, i.e., other 
         # UEs are NOT moving
         
         # get initial location of UE UEid
         initUELoc = self.UELocation[UEid, :];
-        distanceTravelled = velocity*deltaT;
+        distanceTravelled = self.velocity*self.deltaT;
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
@@ -137,6 +142,10 @@ class Network(object):
         
         return finalLocation;
     
+    def stepForward(self, UEid):
+        # updates location of UE UEid
+        self.UELocation[UEid, :] = self.getMobilityTrace(UEid);
+        
     def setCurrentBS(self, BSid):
         # This function sets the current BS the tagged UE is connected to
         
@@ -151,21 +160,73 @@ class Network(object):
     def isRateZero(self):
         # Returns true if the tagged UE currently receives 0 rate
         
-        if (self.timeSinceLastHandoff > self.handoffDuration):
-            return False;
+        if (self.timeSinceLastHandoff < self.handoffDuration):
+            return True;
         else:
             return False;
 
+def generateFigurePresentation():
+
+    numberOfBS = 5; 
+    numberOfUE = 30;
+    networkArea = 1e6
+    BSLocation = np.random.rand(numberOfBS, 2)*np.sqrt(networkArea);
+    UELocation = np.random.rand(numberOfUE, 2)*np.sqrt(networkArea);
+    
+    
+    plt.figure(figsize=(20,20));
+    plt.scatter(BSLocation[:,0], BSLocation[:,1], c='b', marker = '^', s=500)
+    plt.xlim((0, np.sqrt(networkArea)))
+    plt.ylim((0, np.sqrt(networkArea)))
+    plt.legend(("Base Stations",), fontsize = 'xx-large')
+    plt.show()
+    
+    fig = plt.figure(figsize=(20,20));
+    plt.scatter(BSLocation[:,0], BSLocation[:,1], c='b', marker = '^', s=500)
+    plt.scatter(UELocation[0,0], UELocation[0,1], c='r', s=100)
+    plt.xlim((0, np.sqrt(networkArea)))
+    plt.ylim((0, np.sqrt(networkArea)))
+    plt.legend(('Base Stations', 'UEs'), loc = 1, fontsize = 'xx-large')
+    plt.show()
+    
+    vor = Voronoi(BSLocation)
+    fig = plt.figure(figsize=(20,20));
+    plt.scatter(BSLocation[:,0], BSLocation[:,1], c='b', marker = '^', s=500)
+    plt.scatter(UELocation[0,0], UELocation[0,1], c='r', s=100)
+    voronoi_plot_2d(vor, fig.gca(), show_points=False, show_vertices = False)
+    plt.legend(('Base Stations', 'UEs'), loc = 1, fontsize = 'xx-large')
+    plt.xlim((0, np.sqrt(networkArea)))
+    plt.ylim((0, np.sqrt(networkArea)))
+    plt.show()
+    
+    fig = plt.figure(figsize=(20,20));
+    plt.scatter(BSLocation[:,0], BSLocation[:,1], c='b', marker = '^', s=500)
+    plt.scatter(UELocation[:,0], UELocation[:,1], c='r', s=100)
+    plt.xlim((0, np.sqrt(networkArea)))
+    plt.ylim((0, np.sqrt(networkArea)))
+    plt.legend(('Base Stations', 'UEs'), loc = 1, fontsize = 'xx-large')
+    plt.show()
+    
+    fig = plt.figure(figsize=(20,20));
+    plt.scatter(BSLocation[:,0], BSLocation[:,1], c='b', marker = '^', s=500)
+    plt.scatter(UELocation[:,0], UELocation[:,1], c='r', s=100)
+    voronoi_plot_2d(vor, fig.gca(), show_points=False, show_vertices = False)
+    plt.legend(('Base Stations', 'UEs'), loc = 1, fontsize = 'xx-large')
+    plt.xlim((0, np.sqrt(networkArea)))
+    plt.ylim((0, np.sqrt(networkArea)))
+    plt.show()
+    
 if __name__ == "__main__":
-    myNetwork = Network(3e-6, 3e-5, 1e7, 2);
-    myNetwork.generateNetwork();
-    myNetwork.showNetwork();
-    myNetwork.trainKNearestBSModel(3);
-    print(myNetwork.kClosestBS(1000, 1000))
-    
-    print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
-    print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
-    
-    print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
-    print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
-    
+#    myNetwork = Network(3e-6, 3e-5, 1e7, 2);
+#    myNetwork.generateNetwork();
+#    myNetwork.showNetwork();
+#    myNetwork.trainKNearestBSModel(3);
+#    print(myNetwork.kClosestBS(1000, 1000))
+#    
+#    print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
+#    print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
+#    
+#    print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
+#    print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
+#    
+    generateFigurePresentation();
