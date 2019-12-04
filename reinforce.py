@@ -21,7 +21,7 @@ class PiApproximationWithNN():
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -154,7 +154,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
         done = False;
         sumRate = 0;
         episodeLength = 0;
-        state = env.reset();
+        state = env.repeat();
         
         while (not done):
             a = myMaxSharedRatePolicy(state);
@@ -169,7 +169,7 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
         done = False;
         sumRate = 0;
         episodeLength = 0;
-        state= env.reset();
+        state= env.repeat();
         
         while (not done):
             a = RLPolicy(state, env.k);
@@ -188,8 +188,8 @@ def evaluatePolicyPerformance(env, RLPolicy, nEpisodes):
     # tidy up the figure
     ax.grid(True)
     ax.legend(('max SINR', 'max shared rate', 'RL'), loc='right')
-    ax.set_title('Average Rate Per Episode Histogram')
-    ax.set_xlabel('Average Rate (bps)')
+    ax.set_title('Average Log Rate Per Episode Histogram')
+    ax.set_xlabel('Average Log Rate')
     ax.set_ylabel('Likelihood of occurrence')
     
     plt.show()
@@ -217,13 +217,16 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 0.8e-5;
-    networkArea = 1e7;
+    networkArea = 0.9e7;
     k = 5;
     episodeLength = 3;
     handoffDuration = 0;
+    
+    velocity = 0; # 20 meters per second
+    deltaT = 2;
 
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
     gamma = 1.
     alpha = 3e-4
 
@@ -234,12 +237,13 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 500000, pi,B)
+    #G = REINFORCE(env, gamma, 70000, pi,B)
+
     obs = env.reset()
 
-    model_name = str(sys.argv[1])
+    #model_name = str(sys.argv[1])
 
-    torch.save(pi.model, model_name)
+    #torch.save(pi.model, model_name)
 
     print(obs)
     print("Position of max SINR in SNR array")
@@ -253,6 +257,6 @@ if __name__ == "__main__":
     aa = obs.data.numpy()[0:k];
     bb = obs.data.numpy()[k:2*k];
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
-    print(pi.model(torch.from_numpy(np.array([0.100, 0.099, 0.098, 0.097, 0.096, 5, 2, 6, 0, 8])).float()))
+    print(pi.model(torch.from_numpy(np.array([0.500, 0.499, 0.498, 0.497, 0.496, 5, 2, 6, 0, 8])).float()))
 
-    evaluatePolicyPerformance(env, pi, 10000);
+    evaluatePolicyPerformance(env, pi, 1000);
