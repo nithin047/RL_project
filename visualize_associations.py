@@ -8,6 +8,7 @@ from tqdm import trange
 from myNetworkEnvironment import myNetworkEnvironment
 import matplotlib.pyplot as plt
 from matplotlib import colors, cm
+from scipy.spatial import Voronoi, voronoi_plot_2d
 
 def assignBSIDs(env, networkLength, model_name):
 
@@ -26,33 +27,33 @@ def assignBSIDs(env, networkLength, model_name):
 
         print("Visualizing Phase 1")
 
-        # for ii in trange(networkLength):
-        #     for jj in trange(networkLength):
-
-        #         UECoordinates = [ii, jj]
-
-        #         KClosestBS_withID = env.getKClosestBSSINR(UECoordinates)
-        #         obs_torch = torch.from_numpy(KClosestBS_withID[0, :])
-        #         value = model(obs_torch.float())
-        #         probability_array = value.data.numpy()
-
-        #         sampledSINRPosition = np.random.choice(range(k), p=probability_array)
-
-        #         data[ii, jj] = KClosestBS_withID[1, sampledSINRPosition]
-
         for ii in trange(networkLength):
             for jj in trange(networkLength):
 
                 UECoordinates = [ii, jj]
 
-                KClosestBS_withIDAndLoad = env.getKClosestBSSINRShared(UECoordinates)
-                obs_torch = torch.from_numpy(np.concatenate(KClosestBS_withIDAndLoad[0, :], KClosestBS_withIDAndLoad[1, :]))
+                KClosestBS_withID = env.getKClosestBSSINR(UECoordinates)
+                obs_torch = torch.from_numpy(KClosestBS_withID[0, :])
                 value = model(obs_torch.float())
                 probability_array = value.data.numpy()
 
                 sampledSINRPosition = np.random.choice(range(k), p=probability_array)
 
-                data[ii, jj] = KClosestBS_withIDAndLoad[2, sampledSINRPosition]
+                data[ii, jj] = KClosestBS_withID[1, sampledSINRPosition]
+
+        # for ii in trange(networkLength):
+        #     for jj in trange(networkLength):
+
+        #         UECoordinates = [ii, jj]
+
+        #         KClosestBS_withIDAndLoad = env.getKClosestBSSINRShared(UECoordinates)
+        #         obs_torch = torch.from_numpy(np.concatenate(KClosestBS_withIDAndLoad[0, :], KClosestBS_withIDAndLoad[1, :]))
+        #         value = model(obs_torch.float())
+        #         probability_array = value.data.numpy()
+
+        #         sampledSINRPosition = np.random.choice(range(k), p=probability_array)
+
+        #         data[ii, jj] = KClosestBS_withIDAndLoad[2, sampledSINRPosition]
 
     else:
 
@@ -90,6 +91,16 @@ if __name__ == "__main__":
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
     env.reset()
+
+    BSLocations = env.myNetwork.BSLocation
+    vor = Voronoi(BSLocations)
+    X = []
+    Y = []
+    for ii in range(len(BSLocations)):
+        X.append(BSLocations[ii][0])
+        Y.append(BSLocations[ii][1])
+    
+
     #networkLength = 1000
     networkLength = int(np.sqrt(networkArea))
     #assume that one square meter is an entry in the data matrix
@@ -103,9 +114,16 @@ if __name__ == "__main__":
     bounds = range(numColors+1)
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
+
+
     fig, ax = plt.subplots()
     ax.imshow(data, cmap=cmap, norm=norm)
+    plt.plot(BSLocations)
+    plt.scatter(X, Y, c = 'black')
+    plt.savefig("visualization_withBS.eps")
+    plt.close()
 
+    voronoi_plot_2d(vor, show_vertices = False)
+    plt.savefig("ground_truth.eps")
 
-    plt.savefig("visualization.eps")
 
