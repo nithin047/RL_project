@@ -19,19 +19,29 @@ if __name__ == "__main__":
 
     numColors = len(X)
 
-    data = assignBSIDs(env, networkLength, model_name)
+    #data = assignBSIDs(env, networkLength, model_name)
 
     cmap = cm.get_cmap('PiYG', numColors)
     bounds = range(numColors+1)
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
+    data = np.flipud(data)
+    data = np.fliplr(data)
 
+
+    # flipped_BSLocations = np.flipud(flipped_BSLocations)
+    # flipped_BSLocations = np.fliplr(flipped_BSLocations)
+
+    vor = Voronoi(flipped_BSLocations)
 
     fig, ax = plt.subplots()
     ax.imshow(data, cmap=cmap, norm=norm)
-    plt.scatter(X, Y, c = 'black')
+    plt.scatter(Y, 3161 - X, c = 'black')
     plt.savefig("visualization_withBS.eps")
     plt.close()
 
-    voronoi_plot_2d(vor, show_vertices = False)
+    fig, ax1 = plt.subplots()
+    ax1.set_xlim((0, 3000))
+    ax1.set_ylim((0, 3000))
+    voronoi_plot_2d(vor, ax = ax1, show_vertices = False)
     plt.savefig("ground_truth.eps")
