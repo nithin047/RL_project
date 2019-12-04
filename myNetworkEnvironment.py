@@ -61,7 +61,7 @@ class myNetworkEnvironment(gym.Env):
         # this function updates the currentRate attribute
         
         # set current action as the BS serving the tagged UE
-        self.myNetwork.setCurrentBS(self.taggedUEKClosestBS[action]); 
+        self.myNetwork.setCurrentBS(self.taggedUEKClosestBS[self.randomPermutation[action]]); 
         
         if (self.myNetwork.isRateZero()):
             self.currentRate = 0;
@@ -114,7 +114,7 @@ class myNetworkEnvironment(gym.Env):
             currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
-        self.randomPermutation = np.random.permutation(self.k);        
+        self.randomPermutation = np.random.permutation(self.k);  
         self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
         
         self.taggedUERatesNonPermuted = np.copy(self.taggedUERates)
