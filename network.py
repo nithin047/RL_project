@@ -51,7 +51,7 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
-        self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/10, (self.numberOfUE, 2))
+        #self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/10, (self.numberOfUE, 2))
         
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
@@ -127,14 +127,14 @@ class Network(object):
 
         return capacity
     
-    def getMobilityTrace(self, UEid):
+    def getMobilityTrace(self, UEid, steps = 1):
         # This function returns the location of the UE UEid after deltaT time
         # assuming constant velocity v, and fixed environment, i.e., other 
-        # UEs are NOT moving
+        # UEs are NOT moving; single step by default
         
         # get initial location of UE UEid
         initUELoc = self.UELocation[UEid, :];
-        distanceTravelled = self.velocity*self.deltaT;
+        distanceTravelled = self.velocity*steps*self.deltaT;
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
@@ -144,7 +144,7 @@ class Network(object):
     
     def stepForward(self, UEid):
         # updates location of UE UEid
-        self.UELocation[UEid, :] = self.getMobilityTrace(UEid);
+        self.UELocation[UEid, :] = self.getMobilityTrace(UEid, 1);
         
     def setCurrentBS(self, BSid):
         # This function sets the current BS the tagged UE is connected to
@@ -164,6 +164,9 @@ class Network(object):
             return True;
         else:
             return False;
+        
+    def getCurrentBS(self):
+        return self.currentBS;
 
 def generateFigurePresentation():
 
