@@ -21,7 +21,7 @@ class PiApproximationWithNN():
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -226,8 +226,8 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 20; # 60 steps
-    handoffDuration = 2; # 2 steps
+    episodeLength = 30; # 60 steps
+    handoffDuration = 4; # 2 steps
     velocity = 20; # 20 meters per second
     deltaT = 2;
 
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
     #print(pi.model(torch.from_numpy(np.array([0.500, 0.499, 0.498, 0.497, 0.496, 5, 2, 6, 0, 8])).float()))
 
-    evaluatePolicyPerformance(env, pi, 500);
+    evaluatePolicyPerformance(env, pi, 1000);
     
     model_name = str(sys.argv[1])
     torch.save(pi.model, model_name)

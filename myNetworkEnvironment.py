@@ -97,7 +97,7 @@ class myNetworkEnvironment(gym.Env):
         
         localVoronoiModel = NearestNeighbors(n_neighbors=1);
         localVoronoiModel.fit(self.myNetwork.BSLocation[self.taggedUEKClosestBS, :]); 
-        discount = 0.9;
+        discount = 0.95;
         
         for i in range(1, self.stepsLookahead+1):
             futureLocation = self.myNetwork.getMobilityTrace(self.taggedUEId, i);
@@ -151,7 +151,7 @@ class myNetworkEnvironment(gym.Env):
         
         localVoronoiModel = NearestNeighbors(n_neighbors=1);
         localVoronoiModel.fit(self.myNetwork.BSLocation[self.taggedUEKClosestBS, :]); 
-        discount = 0.9;
+        discount = 0.95;
         
         for i in range(1, self.stepsLookahead+1):
             futureLocation = self.myNetwork.getMobilityTrace(self.taggedUEId, i);
@@ -218,7 +218,7 @@ class myNetworkEnvironment(gym.Env):
         
         localVoronoiModel = NearestNeighbors(n_neighbors=1);
         localVoronoiModel.fit(self.myNetwork.BSLocation[self.taggedUEKClosestBS, :]); 
-        discount = 0.9;
+        discount = 0.95;
         
         for i in range(1, self.stepsLookahead+1):
             futureLocation = self.myNetwork.getMobilityTrace(self.taggedUEId, i);
