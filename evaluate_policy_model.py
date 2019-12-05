@@ -26,9 +26,11 @@ if __name__ == "__main__":
     k = 5;
     episodeLength = 3;
     handoffDuration = 0;
+    velocity = 0; # 20 meters per second
+    deltaT = 2;
 
     #create the environment
-    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, episodeLength)
+    env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
 
     for _ in trange(10000):
 
