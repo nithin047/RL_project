@@ -138,7 +138,7 @@ class Network(object):
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
-        finalLocation = initUELoc + displacementVector;
+        finalLocation = (initUELoc + displacementVector)%(np.sqrt(self.networkArea));
         
         return finalLocation;
     
