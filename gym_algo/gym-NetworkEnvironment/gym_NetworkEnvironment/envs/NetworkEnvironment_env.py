@@ -4,9 +4,10 @@ from gym.utils import seeding
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+import numpy.random as rn
 
 class Network(object):
-    def __init__(self, lambdaBS, lambdaUE, networkArea):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT):
         self.lambdaBS = lambdaBS; # intensity of base stations in BS/m^2
         self.lambdaUE = lambdaUE;
         self.networkArea = networkArea; # area of the network to be simulated
@@ -19,6 +20,13 @@ class Network(object):
         self.numberOfUE = 0; # number of UEs in the network
         self.UELocation = np.zeros((1,2)); # X-Y coordinates of UEs in network
         self.UEMotionDirection = np.zeros((1,1)); # angles from 0-2pi of motion directions 
+        
+        self.handoffDuration = handoffDuration; # how many time slots service is lost
+        
+        self.timeSinceLastHandoff = handoffDuration + 1; # time the last handoff started 
+        self.currentBS = -1;
+        self.velocity = velocity;
+        self.deltaT = deltaT;
 
     def generateNetwork(self): 
         # this functions places the BSs in the network + places the UEs in the 
@@ -37,6 +45,7 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
+        self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/10, (self.numberOfUE, 2))
         
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
@@ -71,7 +80,10 @@ class Network(object):
         for i in range(1, self.numberOfUE):
             dist, ind = voronoiModel.kneighbors(self.UELocation[i, :].reshape(1, -1));
             self.BSLoads[ind] += 1;
-            
+        
+        # set current base station attribute, i.e. BS tagged UE is connected to
+        dist, ind = voronoiModel.kneighbors(self.UELocation[0, :].reshape(1, -1));
+        self.currentBS = ind;
 
     
     def showNetwork(self):
@@ -109,30 +121,52 @@ class Network(object):
 
         return capacity
     
-    def getMobilityTrace(self, UEid, deltaT, velocity):
+    def getMobilityTrace(self, UEid):
         # This function returns the location of the UE UEid after deltaT time
         # assuming constant velocity v, and fixed environment, i.e., other 
         # UEs are NOT moving
         
         # get initial location of UE UEid
         initUELoc = self.UELocation[UEid, :];
-        distanceTravelled = velocity*deltaT;
+        distanceTravelled = self.velocity*self.deltaT;
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
-        finalLocation = initUELoc + displacementVector;
+        finalLocation = (initUELoc + displacementVector)%(np.sqrt(self.networkArea));
         
         return finalLocation;
+    
+    def stepForward(self, UEid):
+        # updates location of UE UEid
+        self.UELocation[UEid, :] = self.getMobilityTrace(UEid);
+        
+    def setCurrentBS(self, BSid):
+        # This function sets the current BS the tagged UE is connected to
+        
+        if (self.currentBS == BSid):
+            # do nothing, but update time since last handoff
+            self.timeSinceLastHandoff +=1;
+        else:
+            # reset time since last handoff
+            self.timeSinceLastHandoff = 0;
+            self.currentBS = BSid;
+            
+    def isRateZero(self):
+        # Returns true if the tagged UE currently receives 0 rate
+        
+        if (self.timeSinceLastHandoff < self.handoffDuration):
+            return True;
+        else:
+            return False;
 
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
         
-    def __init__(self, lambdaBS, lambdaUE, networkArea, k, episodeLength):
+    def __init__(self, lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength):
         # Constructor function
         # k: number of closest BSs to consider in the action space
         
         super(myNetworkEnvironment, self).__init__();
-        
         
         # Define a discrete action space
         # k possible actions, where action 1 corresponds to closest BS, action
@@ -149,7 +183,7 @@ class myNetworkEnvironment(gym.Env):
         self.observation_space = spaces.Box(self.low, self.high, dtype=np.float32)
         
         # Create an empty network object
-        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea);
+        self.myNetwork = Network(lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT);
         
         # save input variables
         self.lambdaBS = lambdaBS;
@@ -158,24 +192,52 @@ class myNetworkEnvironment(gym.Env):
         self.k = k;
         self.episodeLength = episodeLength;
         
+        # tagged user id is 0 w.l.o.g.
+        self.taggedUEId = 0;
+        
         
     def step(self, action):
         # Execute one time step within the environment
         self.__take_action__(action)
-        self.currentStep += 1
+        self.currentStep += 1;
         
         reward = self.currentRate;
         done = self.currentStep == self.episodeLength
-        obs = np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
+        obs = np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
         
         return obs, reward, done, {}
         
     def __take_action__(self, action):
         # this function updates the currentRate attribute
-        self.currentRate = self.taggedUERates[action]/(self.myNetwork.BSLoads[self.taggedUEKClosestBS[action]]+1);
+        
+        # set current action as the BS serving the tagged UE
+        self.myNetwork.setCurrentBS(self.taggedUEKClosestBS[self.randomPermutation[action]]); 
+        
+        if (self.myNetwork.isRateZero()):
+            self.currentRate = 0;
+        else:
+            self.currentRate = self.taggedUERates[action]/(self.loadVector[action]+1);
+
         self.currentAction = action;
-                
+        
+        self.myNetwork.stepForward(self.taggedUEId);
+        self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
+        
+        # get list of k closest BSs from tagged user
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+                                                       self.taggedCoord[1])[0];
+                                                            
+        # compute capacities received from k closest BSs
+        self.taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = self.taggedUEKClosestBS[i];
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
     
+        self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
+        
+        self.taggedUERates = self.taggedUERates[self.randomPermutation];
+        
+        
     def reset(self):
         # Reset the state of the environment to an initial state
         # Instantiate the network object
@@ -184,12 +246,15 @@ class myNetworkEnvironment(gym.Env):
         self.myNetwork.generateNetwork();
         # Train KNN model for BSs
         self.myNetwork.trainKNearestBSModel(self.k);
+
+        self.myNetwork.BSLoads = rn.randint(low = 1, high = 6, size = self.myNetwork.numberOfBS)
         
         # tagged user id is 1 w.l.o.g.
         self.taggedUEId = 0;
         
         # tagged user coordinates
         self.taggedCoord = self.myNetwork.UELocation[self.taggedUEId, :];
+        self.taggedCoordInit = self.myNetwork.UELocation[self.taggedUEId, :];
         
         # get list of k closest BSs from tagged user
         self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
@@ -201,17 +266,89 @@ class myNetworkEnvironment(gym.Env):
             currentBSId = self.taggedUEKClosestBS[i];
             self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
 
+         
 
-        # rng_state = np.random.get_state()
-        np.random.shuffle(self.taggedUERates)
-        # np.random.set_state(rng_state)
-        # np.random.shuffle(self.myNetwork.BSLoads)
+        self.randomPermutation = np.random.permutation(self.k);  
+        #self.randomPermutation = np.array(range(self.k));  
+
+        self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
+        
+        self.taggedUERatesNonPermuted = np.copy(self.taggedUERates)
+
+        self.taggedUERates = self.taggedUERates[self.randomPermutation];
+        #self.loadVector = self.loadVector[self.randomPermutation];
         
         # set current step to 0
         self.currentStep = 0;
         
         # return initial state
-        return np.concatenate((self.taggedUERates, np.transpose(self.myNetwork.BSLoads[self.taggedUEKClosestBS])));
+        return np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
+
+    def getKClosestBSSINR(self, UECoordinates):
+        #returns a 2-D array, of size [2, k]. The first row has rate values, and the second consists of unique BS IDs corresponding to those values. 
+
+        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
+        taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = taggedUEKClosestBS[i];
+            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
+
+        return_array = []
+        return_array.append(taggedUERates)
+        return_array.append(taggedUEKClosestBS)
+
+        return np.asarray(return_array)
+
+    def getKClosestBSSINRShared(self, UECoordinates):
+        #returns a 2-D array, of size [3, k]. The first row has rate values, the second has the user loads for those BSs,
+        #and the third consists of unique BS IDs corresponding to those values. 
+
+        taggedUEKClosestBS = self.myNetwork.kClosestBS(UECoordinates[0], UECoordinates[1])[0]
+        taggedUERates = np.zeros(self.k);
+        taggedUEBSLoads = np.zeros(self.k);
+
+        for i in range(self.k):
+            currentBSId = taggedUEKClosestBS[i];
+            taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
+            taggedUEBSLoads[i] = self.myNetwork.BSLoads[taggedUEKClosestBS]
+
+        return_array = []
+        return_array.append(taggedUERates)
+        return_array.append(taggedUEBSLoads)
+        return_array.append(taggedUEKClosestBS)
+
+        return np.asarray(return_array)
+    
+    def repeat(self):
+        # Reset the state of the environment to last initial state
+        # Uses last network object
+        
+        self.myNetwork.timeSinceLastHandoff = self.myNetwork.handoffDuration + 1; # time the last handoff started 
+        self.myNetwork.currentBS = -1;
+        
+        # tagged user coordinates
+        self.taggedCoord = self.taggedCoordInit
+        
+        # get list of k closest BSs from tagged user
+        self.taggedUEKClosestBS = self.myNetwork.kClosestBS(self.taggedCoord[0], 
+                                                       self.taggedCoord[1])[0];
+        
+        # compute capacities received from k closest BSs
+        self.taggedUERates = np.zeros(self.k);
+        for i in range(self.k):
+            currentBSId = self.taggedUEKClosestBS[i];
+            self.taggedUERates[i] = self.myNetwork.getRate(currentBSId, self.taggedCoord, 10, 3, 1e-17, 1);
+                
+        # set current step to 0
+        self.currentStep = 0;
+        
+        self.loadVector = self.myNetwork.BSLoads[self.taggedUEKClosestBS];
+        self.taggedUERates = self.taggedUERates[self.randomPermutation];
+        #self.loadVector = self.loadVector[self.randomPermutation];
+        
+        # return initial state
+        return np.concatenate((self.taggedUERates, np.transpose(self.loadVector)));
+    
     
     def render(self): #MODIFY THIS!
     # Render the environment to the screen
