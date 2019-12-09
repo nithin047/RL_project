@@ -136,10 +136,16 @@ if __name__ == "__main__":
     lambdaUE = 1e-5;
     networkArea = 1e7;
     k = 5;
-    episodeLength = 5;
-    handoffDuration = 0;
-
-    velocity = 0; # 20 meters per second
+    
+    # be careful to choose the parameters below carefully
+    # e.g. I want the UE to experience roughly 4 handoffs per episode
+    # the velocity is 20meters/s = 76 km/h. If the BS density is 3BS/km^2, 
+    # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
+    # the episode should then cover around 2400m, or 120s given the velocity
+    # if the episode length is of 60 steps, then deltaT should be 2s.
+    episodeLength = 30; # 60 steps
+    handoffDuration = 4; # 2 steps
+    velocity = 20; # 20 meters per second
     deltaT = 2;
 
     #create the environment

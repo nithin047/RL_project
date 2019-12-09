@@ -35,7 +35,9 @@ def make_env(env_id, seed, rank, log_dir, allow_early_resets):
             _, domain, task = env_id.split('.')
             env = dm_control2gym.make(domain_name=domain, task_name=task)
         else:
-            env = gym.make(env_id, lambdaBS = 3e-6, lambdaUE = 0.8e-5, networkArea = 1e7, k = 5, handoffDuration = 0, velocity=0, deltaT=2, episodeLength = 3)
+
+            env = gym.make(env_id, lambdaBS = 3e-6, lambdaUE = 0.8e-5, networkArea = 1e7, k = 5, handoffDuration = 4, velocity = 20, deltaT = 2, episodeLength = 30)
+
 
         is_atari = hasattr(gym.envs, 'atari') and isinstance(
             env.unwrapped, gym.envs.atari.atari_env.AtariEnv)

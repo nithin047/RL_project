@@ -81,9 +81,11 @@ def evaluate_and_plot_rate(env, model, nEpisodes):
         while (not done):
 
             state_torch = torch.from_numpy(state)
-            _, sampledSINRPosition, _, _ = model.act(state_torch.float(), None, None)
+            _, action, _, _ = model.act(state_torch.float(), None, None)
 
-            state, reward, done, info = env.step(a);
+            #a = np.random.choice(range(k), p=action_probability_array)
+            state, reward, done, info = env.step(action);
+
             sumRate += reward;
             episodeLength += 1;
             
@@ -103,7 +105,9 @@ def evaluate_and_plot_rate(env, model, nEpisodes):
     ax.set_ylabel('Likelihood of occurrence')
     
     #plt.show()
-    plt.savefig("histogram_log.eps")
+
+    plt.savefig("histogram_log_ppo.eps")
+
     plt.close()
     # plot results    
     fig, ax = plt.subplots(figsize=(15, 10))
@@ -118,8 +122,8 @@ def evaluate_and_plot_rate(env, model, nEpisodes):
     ax.set_xlabel('Average Rate (bps)')
     ax.set_ylabel('Likelihood of occurrence')
     
-    #plt.show()
-    plt.savefig("histogram.eps")
+
+    plt.savefig("histogram_ppo.eps")
     plt.close()
     
     print("mean rate max sinr = ", np.mean(meanRateListMaxSINR))
@@ -131,13 +135,19 @@ if __name__ == "__main__":
     model_name = str(sys.argv[1])
 
     lambdaBS = 3e-6;
-    lambdaUE = 1e-5;
+    lambdaUE = 0.8e-5;
     networkArea = 1e7;
     k = 5;
-    episodeLength = 5;
-    handoffDuration = 0;
-
-    velocity = 0; # 20 meters per second
+    
+    # be careful to choose the parameters below carefully
+    # e.g. I want the UE to experience roughly 4 handoffs per episode
+    # the velocity is 20meters/s = 76 km/h. If the BS density is 3BS/km^2, 
+    # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
+    # the episode should then cover around 2400m, or 120s given the velocity
+    # if the episode length is of 60 steps, then deltaT should be 2s.
+    episodeLength = 30; # 60 steps
+    handoffDuration = 4; # 2 steps
+    velocity = 20; # 20 meters per second
     deltaT = 2;
 
     #create the environment

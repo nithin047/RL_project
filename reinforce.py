@@ -17,11 +17,11 @@ class PiApproximationWithNN():
                  alpha = 3e-4):
         #initializing the neural network
         self.n_in = state_dims
-        self.n_h = 10
+        self.n_h = 32
         self.n_out = num_actions
         self.alpha = alpha
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
         self.model = self.model.float()
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
@@ -217,7 +217,7 @@ if __name__ == "__main__":
 
     lambdaBS = 3e-6;
     lambdaUE = 0.8e-5;
-    networkArea = 0.9e7;
+    networkArea = 1e7;
     k = 5;
     
     # be careful to choose the parameters below carefully
@@ -226,9 +226,9 @@ if __name__ == "__main__":
     # then the cell diameter is roughly sqrt(1/3e-6) ~= 600m
     # the episode should then cover around 2400m, or 120s given the velocity
     # if the episode length is of 60 steps, then deltaT should be 2s.
-    episodeLength = 3; # 60 steps
-    handoffDuration = 0; # 2 steps
-    velocity = 0; # 20 meters per second
+    episodeLength = 30; # 60 steps
+    handoffDuration = 4; # 2 steps
+    velocity = 20; # 20 meters per second
     deltaT = 2;
 
     #create the environment
@@ -237,13 +237,13 @@ if __name__ == "__main__":
     alpha = 3e-4
 
     pi = PiApproximationWithNN(
-    2*env.k,
+    3*env.k+1,
     env.action_space.n,
     alpha)
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 100000, pi,B)
+    G = REINFORCE(env, gamma, 20000, pi, B)
 
     obs = env.reset()
 
@@ -259,9 +259,9 @@ if __name__ == "__main__":
     aa = obs.data.numpy()[0:k];
     bb = obs.data.numpy()[k:2*k];
     print("Probability 1 should be at index: ", np.argmax(aa/(bb+1)));
-    print(pi.model(torch.from_numpy(np.array([0.500, 0.499, 0.498, 0.497, 0.496, 5, 2, 6, 0, 8])).float()))
+    #print(pi.model(torch.from_numpy(np.array([0.500, 0.499, 0.498, 0.497, 0.496, 5, 2, 6, 0, 8])).float()))
 
-    evaluatePolicyPerformance(env, pi, 2000);
+    evaluatePolicyPerformance(env, pi, 1000);
     
     model_name = str(sys.argv[1])
     torch.save(pi.model, model_name)

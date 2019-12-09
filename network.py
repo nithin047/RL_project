@@ -8,6 +8,7 @@ Created on Sun Nov 17 11:38:42 2019
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
+import math
 
 from scipy.spatial import Voronoi, voronoi_plot_2d
 
@@ -51,7 +52,10 @@ class Network(object):
         
         # Determine their locations
         self.UELocation = np.random.rand(self.numberOfUE, 2)*np.sqrt(self.networkArea);
-        self.UELocation = np.random.normal(np.sqrt(self.networkArea)/2, np.sqrt(self.networkArea)/10, (self.numberOfUE, 2))
+        
+        uelocs1 = np.random.normal(np.sqrt(self.networkArea)*0.6, np.sqrt(self.networkArea)/4, (math.ceil(self.numberOfUE/2), 2))
+        uelocs2 = np.random.normal(np.sqrt(self.networkArea)*0.25, np.sqrt(self.networkArea)/10, (math.floor(self.numberOfUE/2), 2))
+        self.UELocation = np.concatenate((uelocs1, uelocs2), axis=0)
         
         # Determine their direction of motion
         # angles from 0-2pi of motion directions 
@@ -127,14 +131,14 @@ class Network(object):
 
         return capacity
     
-    def getMobilityTrace(self, UEid):
+    def getMobilityTrace(self, UEid, steps = 1):
         # This function returns the location of the UE UEid after deltaT time
         # assuming constant velocity v, and fixed environment, i.e., other 
-        # UEs are NOT moving
+        # UEs are NOT moving; single step by default
         
         # get initial location of UE UEid
         initUELoc = self.UELocation[UEid, :];
-        distanceTravelled = self.velocity*self.deltaT;
+        distanceTravelled = self.velocity*steps*self.deltaT;
         theta = self.UEMotionDirection[UEid];
         
         displacementVector = np.transpose(np.array([np.cos(theta), np.sin(theta)]))*distanceTravelled;
@@ -144,7 +148,7 @@ class Network(object):
     
     def stepForward(self, UEid):
         # updates location of UE UEid
-        self.UELocation[UEid, :] = self.getMobilityTrace(UEid);
+        self.UELocation[UEid, :] = self.getMobilityTrace(UEid, 1);
         
     def setCurrentBS(self, BSid):
         # This function sets the current BS the tagged UE is connected to
@@ -164,6 +168,9 @@ class Network(object):
             return True;
         else:
             return False;
+        
+    def getCurrentBS(self):
+        return self.currentBS;
 
 def generateFigurePresentation():
 
@@ -217,16 +224,16 @@ def generateFigurePresentation():
     plt.show()
     
 if __name__ == "__main__":
-#    myNetwork = Network(3e-6, 3e-5, 1e7, 2);
-#    myNetwork.generateNetwork();
-#    myNetwork.showNetwork();
-#    myNetwork.trainKNearestBSModel(3);
-#    print(myNetwork.kClosestBS(1000, 1000))
-#    
-#    print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
-#    print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
-#    
-#    print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
-#    print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
-#    
-    generateFigurePresentation();
+    myNetwork = Network(3e-6, 3e-5, 1e7, 2, 0,0);
+    myNetwork.generateNetwork();
+    myNetwork.showNetwork();
+    myNetwork.trainKNearestBSModel(3);
+    print(myNetwork.kClosestBS(1000, 1000))
+    
+    print("Current tagged UE location = ", myNetwork.UELocation[1, :]);
+    print("Current tagged UE rate = ", myNetwork.getRate(3, myNetwork.UELocation[1, :], 10, 3, 1e-17, 1e8));
+    
+    print("Future tagged UE location = ", myNetwork.getMobilityTrace(1, 1, 10));
+    print("Future tagged UE rate = ", myNetwork.getRate(3, myNetwork.getMobilityTrace(1, 1, 10), 10, 3, 1e-17, 1e8));
+    
+    #generateFigurePresentation();

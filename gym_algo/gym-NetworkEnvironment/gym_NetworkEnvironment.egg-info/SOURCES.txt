@@ -1,8 +1,0 @@
-README.md
-setup.py
-gym_NetworkEnvironment.egg-info/PKG-INFO
-gym_NetworkEnvironment.egg-info/SOURCES.txt
-gym_NetworkEnvironment.egg-info/dependency_links.txt
-gym_NetworkEnvironment.egg-info/desktop.ini
-gym_NetworkEnvironment.egg-info/requires.txt
-gym_NetworkEnvironment.egg-info/top_level.txt
