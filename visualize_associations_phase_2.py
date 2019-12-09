@@ -9,6 +9,7 @@ from myNetworkEnvironment import myNetworkEnvironment
 import matplotlib.pyplot as plt
 from matplotlib import colors, cm
 from scipy.spatial import Voronoi, voronoi_plot_2d
+import numpy.random as rn
 
 def assignBSIDs(env, networkLength, model_name):
 
@@ -65,7 +66,10 @@ def assignBSIDs(env, networkLength, model_name):
                 UECoordinates = [ii, jj]
 
                 KClosestBS_withIDAndLoad = env.getKClosestBSSINRShared(UECoordinates)
-                obs_torch = torch.from_numpy(np.concatenate(KClosestBS_withIDAndLoad[0, :], KClosestBS_withIDAndLoad[1, :]))
+                #print(KClosestBS_withIDAndLoad[0, :])
+                #print(KClosestBS_withIDAndLoad[1, :])
+                #print(np.concatenate(KClosestBS_withIDAndLoad[0, :], KClosestBS_withIDAndLoad[1, :]))
+                obs_torch = torch.from_numpy(np.concatenate((5 * KClosestBS_withIDAndLoad[0, :], KClosestBS_withIDAndLoad[1, :])))
                 value = model(obs_torch.float())
                 probability_array = value.data.numpy()
 
@@ -82,9 +86,9 @@ if __name__ == "__main__":
     model_name = str(sys.argv[1])
 
     lambdaBS = 3e-6;
-    lambdaUE = 0;
+    lambdaUE = 1e-5;
     networkArea = 1e7;
-    k = 10;
+    k = 5;
     episodeLength = 3;
     handoffDuration = 0;
     velocity = 0; # 20 meters per second
@@ -122,19 +126,19 @@ if __name__ == "__main__":
 
 
 
-    # fig, ax = plt.subplots()
-    # ax.imshow(data, cmap=cmap, norm=norm)
-    # plt.scatter(X, Y, c = 'black')
-    # plt.savefig("visualization_withBS.eps")
-    # plt.close()
+    fig, ax = plt.subplots()
+    ax.imshow(data, cmap=cmap, norm=norm)
+    plt.scatter(X, Y, c = 'black')
+    plt.savefig("visualization_withBS_phase2.eps")
+    plt.close()
 
-    # voronoi_plot_2d(vor, show_vertices = False)
-    # plt.savefig("ground_truth.eps")
+    voronoi_plot_2d(vor, show_vertices = False)
+    plt.savefig("ground_truth_phase2.eps")
 
-    np.savetxt("./visualization_data/flipped_BSLocations.txt", flipped_BSLocations)
-    np.savetxt("./visualization_data/data.txt", data)
-    np.savetxt("./visualization_data/X.txt", X)
-    np.savetxt("./visualization_data/Y.txt", Y)
+    np.savetxt("./visualization_data/phase_2/flipped_BSLocations1.txt", flipped_BSLocations)
+    np.savetxt("./visualization_data/phase_2/data1.txt", data)
+    np.savetxt("./visualization_data/phase_2/X1.txt", X)
+    np.savetxt("./visualization_data/phase_2/Y1.txt", Y)
 
 
 

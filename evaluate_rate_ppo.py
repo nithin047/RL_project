@@ -81,10 +81,8 @@ def evaluate_and_plot_rate(env, model, nEpisodes):
         while (not done):
 
             state_torch = torch.from_numpy(state)
-            torch_output = model(state_torch.float())
-            action_probability_array = torch_output.data.numpy()
+            _, sampledSINRPosition, _, _ = model.act(state_torch.float(), None, None)
 
-            a = np.random.choice(range(k), p=action_probability_array)
             state, reward, done, info = env.step(a);
             sumRate += reward;
             episodeLength += 1;
@@ -145,6 +143,7 @@ if __name__ == "__main__":
     #create the environment
     env = myNetworkEnvironment(lambdaBS, lambdaUE, networkArea, k, handoffDuration, velocity, deltaT, episodeLength)
     
-    model = torch.load(model_name)
+    model = torch.load(model_name)[0]
+    model = model.float()
 
     evaluate_and_plot_rate(env, model, 10000)

@@ -10,12 +10,14 @@ import matplotlib.pyplot as plt
 from typing import Iterable
 
 
+
 if __name__ == "__main__":
 
-    model_name = str(sys.argv[1])
+
 
     #train_and_save()
-    model = torch.load(model_name)
+    model = torch.load("phase_2_pls_work_ppo.pt")[0]
+    model = model.float()
     #model.eval()
 
     accuracy_array = []
@@ -37,16 +39,14 @@ if __name__ == "__main__":
 
         obs = env.reset()
         k = env.k
-        maxSINRPostionShared = np.argmax(np.divide(obs[0:k], obs[k:]+1))
+        maxSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:] + 1))
 
         obs_torch = torch.from_numpy(obs)
-        value = model(obs_torch.float())
-        probability_array = value.data.numpy()
+        _, sampledSINRPosition, _, _ = model.act(obs_torch.float(), None, None)
+        #probability_array = value.data.numpy()
+        #sampledSINRPosition = np.random.choice(range(k), p=probability_array)
 
-        sampledSINRPosition = np.random.choice(range(k), p=probability_array)
-        sampledSINRPosition = np.argmax(probability_array)
-
-        if maxSINRPostionShared == sampledSINRPosition:
+        if maxSINRPostion == sampledSINRPosition:
             accuracy_array.append(1)
         else:
             accuracy_array.append(0)

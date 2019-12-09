@@ -12,10 +12,10 @@ from scipy.spatial import Voronoi, voronoi_plot_2d
 
 if __name__ == "__main__":
 
-    flipped_BSLocations = np.loadtxt("./visualization_data/phase_1/flipped_BSLocations.txt")
-    data = np.loadtxt("./visualization_data/phase_1/data.txt")
-    X = np.loadtxt("./visualization_data/phase_1/X.txt")
-    Y = np.loadtxt("./visualization_data/phase_1/Y.txt")
+    flipped_BSLocations = np.loadtxt("./visualization_data/phase_2/flipped_BSLocations1.txt")
+    data = np.loadtxt("./visualization_data/phase_2/data1.txt")
+    X = np.loadtxt("./visualization_data/phase_2/X1.txt")
+    Y = np.loadtxt("./visualization_data/phase_2/Y1.txt")
 
     numColors = len(X)
 
@@ -24,8 +24,8 @@ if __name__ == "__main__":
     norm = colors.BoundaryNorm(bounds, cmap.N)
 
 
-    data = np.flipud(data)
-    data = np.fliplr(data)
+    #data = np.flipud(data)
+    #data = np.fliplr(data)
 
 
     # flipped_BSLocations = np.flipud(flipped_BSLocations)
@@ -35,13 +35,13 @@ if __name__ == "__main__":
 
     fig, ax = plt.subplots()
     ax.imshow(data, cmap=cmap, norm=norm)
-    plt.scatter(Y, 3161 - X, c = 'black')
-    plt.savefig("visualization_withBS.eps")
-    plt.close()
+    #plt.scatter(Y, 3161 - X, c = 'black')
+    #plt.savefig("visualization_withBS.eps")
 
-    fig, ax1 = plt.subplots()
-    ax1.set_xlim((0, 3000))
-    ax1.set_ylim((0, 3000))
-    voronoi_plot_2d(vor, ax1, show_vertices = False)
 
-    plt.savefig("ground_truth.eps")
+    #fig1, ax1 = plt.subplots()
+    ax.set_xlim((0, 3000))
+    ax.set_ylim((0, 3000))
+    voronoi_plot_2d(vor, ax, show_vertices = False)
+
+    plt.savefig("ground_truth_combined.eps")

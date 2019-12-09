@@ -10,6 +10,7 @@ from gym import spaces
 from network import Network
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.random as rn
 
 class myNetworkEnvironment(gym.Env):
     # Custom environment for our network simulator
@@ -96,7 +97,9 @@ class myNetworkEnvironment(gym.Env):
         self.myNetwork.generateNetwork();
         # Train KNN model for BSs
         self.myNetwork.trainKNearestBSModel(self.k);
-        
+
+        self.myNetwork.BSLoads = rn.randint(low = 1, high = 6, size = self.myNetwork.numberOfBS)
+        #print(self.myNetwork.BSLoads)
         # tagged user id is 1 w.l.o.g.
         self.taggedUEId = 0;
         
@@ -158,7 +161,7 @@ class myNetworkEnvironment(gym.Env):
         for i in range(self.k):
             currentBSId = taggedUEKClosestBS[i];
             taggedUERates[i] = self.myNetwork.getRate(currentBSId, UECoordinates, 10, 3, 1e-17, 1)
-            taggedUEBSLoads[i] = self.myNetwork.BSLoads[taggedUEKClosestBS]
+            taggedUEBSLoads[i] = self.myNetwork.BSLoads[taggedUEKClosestBS[i]]
 
         return_array = []
         return_array.append(taggedUERates)
