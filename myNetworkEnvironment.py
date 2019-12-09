@@ -31,7 +31,9 @@ class myNetworkEnvironment(gym.Env):
         # Define State Space, or observation space
         # There are k features in state space, where feature i corresponds to
         # the capacity received by BS i
-        self.observation_space = spaces.Discrete(3*k+1); #DOUBLE CHECK THIS
+        self.high = np.ones(3*k+1) * np.finfo(np.float32).max
+        self.low = np.zeros(3*k+1)
+        self.observation_space = spaces.Box(self.low, self.high, dtype=np.float32)
         
         # Create an empty network object
         self.myNetwork = Network(lambdaBS, lambdaUE, networkArea, handoffDuration, velocity, deltaT);
