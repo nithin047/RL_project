@@ -14,9 +14,9 @@ from typing import Iterable
 if __name__ == "__main__":
 
 
-
+    model_name = str(sys.argv[1])
     #train_and_save()
-    model = torch.load("phase_2_pls_work_ppo.pt")[0]
+    model = torch.load(model_name)[0]
     model = model.float()
     #model.eval()
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         obs = env.reset()
         k = env.k
-        maxSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:] + 1))
+        maxSINRPostion = np.argmax(np.divide(obs[0:k], obs[k:2*k] + 1))
 
         obs_torch = torch.from_numpy(obs)
         _, sampledSINRPosition, _, _ = model.act(obs_torch.float(), None, None)

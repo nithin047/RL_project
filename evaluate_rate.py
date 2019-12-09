@@ -153,4 +153,4 @@ if __name__ == "__main__":
     
     model = torch.load(model_name)
 
-    evaluate_and_plot_rate(env, model, 10000)
+    evaluate_and_plot_rate(env, model, 100)

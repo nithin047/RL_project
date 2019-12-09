@@ -243,7 +243,7 @@ if __name__ == "__main__":
 
     B = Baseline(0.5)
 
-    G = REINFORCE(env, gamma, 20000, pi, B)
+    G = REINFORCE(env, gamma, 10000, pi, B)
 
     obs = env.reset()
 

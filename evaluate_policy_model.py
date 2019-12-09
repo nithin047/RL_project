@@ -37,14 +37,13 @@ if __name__ == "__main__":
 
         obs = env.reset()
         k = env.k
-        maxSINRPostionShared = np.argmax(np.divide(obs[0:k], obs[k:]+1))
+        maxSINRPostionShared = np.argmax(np.divide(obs[0:k], obs[k:2*k]+1))
 
         obs_torch = torch.from_numpy(obs)
         value = model(obs_torch.float())
         probability_array = value.data.numpy()
 
         sampledSINRPosition = np.random.choice(range(k), p=probability_array)
-        sampledSINRPosition = np.argmax(probability_array)
 
         if maxSINRPostionShared == sampledSINRPosition:
             accuracy_array.append(1)
