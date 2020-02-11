@@ -1,5 +1,6 @@
 #playing around with the environment
-#this script initializes a network configuration, and attempts to estimate the value (under a fixed policy - here either deterministic or uniformly random) 
+#this script initializes a network configuration, and attempts to estimate
+#the value (under a fixed policy-here either deterministic or uniformly random) 
 #of a state using a neural network.
 
 import numpy as np

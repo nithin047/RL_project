@@ -46,7 +46,7 @@ if __name__ == "__main__":
     lambdaBS = 3e-6;
     lambdaUE = 3e-5;
     networkArea = 1e7;
-    k = 10;
+    k = 6;
     episodeLength = 20;
 
     #create the environment

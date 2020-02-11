@@ -15,26 +15,44 @@ class PiApproximationWithNN():
                  state_dims,
                  num_actions,
                  alpha = 3e-4):
+        
         #initializing the neural network
-        self.n_in = state_dims
-        self.n_h = 32
-        self.n_out = num_actions
-        self.alpha = alpha
+        
+        # input layer size equals state space size
+        self.n_in = state_dims 
+        # each hidden layer has 32 neurons
+        self.n_h = 32 
+        # output layer has a neuron for each possible action
+        self.n_out = num_actions 
+        # NN learning rate
+        self.alpha = alpha 
 
-        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_h), nn.ReLU(), nn.Linear(self.n_h, self.n_out), nn.Softmax(dim=0))
+        # construct the NN
+        self.model = nn.Sequential(nn.Linear(self.n_in, self.n_h), nn.ReLU(),
+                                   nn.Linear(self.n_h, self.n_h), nn.ReLU(), 
+                                   nn.Linear(self.n_h, self.n_out), 
+                                   nn.Softmax(dim=0))
+        # convert pytorch NN parameters to float
         self.model = self.model.float()
+        
+        # set the solver
         self.optimizer = optim.Adam(self.model.parameters(), lr = self.alpha)
 
 
 
     def __call__(self, s, k) -> int:
-        #returns an action sampled according to the probability distribution that the policy network generates
+        # this function returns an action sampled according to the probability 
+        # distribution that the policy network generates
+        
+        # convert input to pytorch object
         s = torch.from_numpy(s)
+        # convert pytorch object parameters to float
         value = self.model(s.float())
+        # retrieve the probability vector, output of the NN softmax layer
         prob_array = value.data.numpy()
-        action_array = range(k)
-
-        action = np.random.choice(action_array, p=prob_array)
+        
+        # choose action wrt probability vector
+        action = np.random.choice(range(k), p=prob_array)
 
         return action
 
@@ -50,8 +68,9 @@ class PiApproximationWithNN():
         self.optimizer.step()
 
 class Baseline(object):
-    #naive implementation of a zero baseline. Using the state values as baseline resulted in very unstable policies, so I think
-    #we should keep a zero baseline.
+    # Naive implementation of a fixed baseline. 
+    # Using the state values as baseline resulted in very unstable policies, 
+    # so I think we should keep a zero baseline.
     def __init__(self,b):
         self.b = b
 
@@ -69,7 +88,6 @@ pi:PiApproximationWithNN,
 V:Baseline) -> Iterable[float]:
 
     G_list = []
-    V_list = []
 
     for _ in trange(num_episodes):
         S = []
@@ -77,8 +95,7 @@ V:Baseline) -> Iterable[float]:
         A = []
         state, r, done = env.reset(), 0., False
         S.append(state)
-        #V_list.append(V(state))
-        #pi(state)
+
         while(True):
             a = pi(state, env.k)
             A.append(a)
@@ -97,7 +114,6 @@ V:Baseline) -> Iterable[float]:
             if ii == 0:
                     G_list.append(G_t)
 
-            #V.update(S[ii], G_t)
             pi.update(S[ii], A[ii], gamma**ii, G_t - V(S[ii]))
 
     return G_list
@@ -106,7 +122,7 @@ def train_and_save():
     lambdaBS = 3e-6;
     lambdaUE = 3e-5;
     networkArea = 1e8;
-    k = 10;
+    k = 6;
     episodeLength = 5;
 
     #create the environment
@@ -119,9 +135,10 @@ def train_and_save():
     env.action_space.n,
     alpha)
 
+    # set baseline to be 0
     B = Baseline(0.)
 
-    G = REINFORCE(env, gamma, 300000, pi,B)
+    G = REINFORCE(env, gamma, 100000, pi,B)
     
     #saving the trained policy network
     torch.save(pi.model, "policy_network.pt")
